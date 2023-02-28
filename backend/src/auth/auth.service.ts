@@ -23,10 +23,9 @@ export class AuthService {
     const intraApiService = new IntraApiService(response.data.access_token);
 
     const { data } = await intraApiService.getMe();
+    const username = data.login;
 
-    console.log(data);
-
-    const payload = { data };
+    const payload = { username };
     return {
       access_token: this.jwtService.sign(payload),
     };

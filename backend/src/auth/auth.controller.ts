@@ -12,5 +12,11 @@ export class AuthController {
     return await this.authService.login(loginDto);
   }
 
-  async getUser() {}
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/user')
+  async getUser() {
+    return {
+      name: 'ali',
+    };
+  }
 }

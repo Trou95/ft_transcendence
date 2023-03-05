@@ -1,25 +1,28 @@
-import {useEffect} from "react";
-import {useRouter} from "next/router";
-import axios from "axios";
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import axios from 'axios';
 
 export default function Callback() {
-    const {query} = useRouter();
+    const { query, push } = useRouter();
 
-    useEffect(() =>  {
-        if(!query?.code)
-            return
+    useEffect(() => {
+        if (!query?.code) return;
         async function test() {
-            await axios.post("http://localhost:3000/auth/login", {code: query?.code})
-                .then((res) => localStorage.setItem('user', JSON.stringify(res.data)))
+            await axios
+                .get('http://localhost:4242/auth/callback', {
+                    params: {
+                        code: query?.code,
+                    },
+                })
+                .then(res => {
+                    localStorage.setItem('user', JSON.stringify(res.data));
+                    push('/');
+                })
                 .catch(err => console.log(err));
         }
 
         test();
+    }, [query.code]);
 
-    },[query.code])
-
-    return (
-        <>
-        </>
-    )
+    return <></>;
 }

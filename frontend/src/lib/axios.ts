@@ -4,7 +4,7 @@ let access_token = null;
 
 if (typeof window !== 'undefined') {
     const user: any = window.localStorage.getItem('user');
-    access_token = JSON.parse(user)['access_token'];
+    access_token = user?.access_token;
 }
 
 const axios = Axios.create({

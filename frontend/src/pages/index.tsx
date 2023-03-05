@@ -1,17 +1,13 @@
-import { useEffect, useState } from 'react';
-import axios from '@/lib/axios';
+import Layout from '@/layouts/MainLayout';
+import React from 'react';
+import DashboardLayout from '@/layouts/DashboardLayout';
 
-export default function Home() {
-    const [user, setUser] = useState({
-        name: undefined,
-    });
+Index.getLayout = (page: any) => <DashboardLayout>{page}</DashboardLayout>;
 
-    useEffect(() => {
-        axios.get('/auth/user').then(res => setUser(res.data));
-    }, []);
+export default function Index() {
     return (
         <>
-            <h1 className="text-9xl text-red-700">{user.name}</h1>
+            <h1>MErhaba</h1>
         </>
     );
 }

@@ -1,5 +1,3 @@
-import * as process from "process";
-
 const config = {
   intra: {
     clientId: process.env.CLIENT_ID,
@@ -9,5 +7,4 @@ const config = {
     apiUrl: process.env.API_URL,
   },
 };
-
 export default config;

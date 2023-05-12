@@ -1,8 +1,8 @@
-import axios from 'axios';
 import config from 'src/config';
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Request, Query, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CallbackDto } from './dto/callback.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -11,23 +11,17 @@ export class AuthController {
   @Get('callback')
   async callback(@Query() query: CallbackDto) {
     try {
-      const res = axios.post(
-        config.intra.tokenUrl,
-        {
-          grant_type: 'authorization_code',
-          client_id: config.intra.clientId,
-          client_secret: config.intra.clientSecret,
-          redirect_url: config.intra.redirectUrl,
-          code: query.code,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept-Encoding': 'identity',
-          },
-        },
-      );
+      const access_token = await this.authService.callback(query.code);
+      return access_token;
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
-    } catch (error) {}
+  @Get('my-account')
+  @UseGuards(AuthGuard('jwt'))
+  myAccount(@Request() req) {
+    const user = this.authService.myAccount(req.user.id);
+    return user;
   }
 }

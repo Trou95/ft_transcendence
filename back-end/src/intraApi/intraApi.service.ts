@@ -1,7 +1,8 @@
 import axios, { AxiosInstance } from 'axios';
-import config from '../config';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { intraTokenDto } from './dto/intraToken.dto';
+import { UserDto } from '../user/dto/user.dto';
+import * as process from 'process';
 
 @Injectable()
 export class IntraApiService {
@@ -10,7 +11,7 @@ export class IntraApiService {
     if (!token) throw new BadRequestException();
 
     this.intraApiService = axios.create({
-      baseURL: config.intra.apiUrl,
+      baseURL: process.env.API_URL,
       headers: {
         Authorization: `Bearer ${token.access_token}`,
       },
@@ -20,8 +21,15 @@ export class IntraApiService {
     try {
       const res = await this.intraApiService.get('/me');
       return res.data;
-    } catch (error) {
-      console.log('ERROR', error);
-    }
+    } catch (error) {}
+  }
+
+  parseUser(user: any): UserDto {
+    return {
+      intra_id: user.id,
+      full_name: user.displayname,
+      email: user.email,
+      avatar: user.image.link,
+    };
   }
 }

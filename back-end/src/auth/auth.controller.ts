@@ -1,5 +1,13 @@
 import config from 'src/config';
-import { Controller, Get, Request, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Request,
+  Query,
+  UseGuards,
+  Post,
+  Body,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CallbackDto } from './dto/callback.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -8,11 +16,13 @@ import { AuthGuard } from '@nestjs/passport';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Get('callback')
-  async callback(@Query() query: CallbackDto) {
+  @Post('callback')
+  async callback(@Body() body: CallbackDto) {
     try {
-      const access_token = await this.authService.callback(query.code);
-      return access_token;
+      const access_token = await this.authService.callback(body.code);
+      return {
+        token: access_token,
+      };
     } catch (error) {
       console.log(error);
     }

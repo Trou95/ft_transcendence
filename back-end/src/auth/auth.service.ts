@@ -39,7 +39,7 @@ export class AuthService {
   }
 
   async myAccount(id) {
-    const user = await this.userService.get(id);
+    const user = await this.userService.get({ intra_id: id });
     return user;
   }
 

@@ -5,8 +5,10 @@ import { UserModule } from './user/user.module';
 import { TokenModule } from './token/token.module';
 import { User } from './user/user.entity';
 import { config as dotenv } from 'dotenv';
+import { ChatGateway } from './chat/chat.gateway';
 dotenv({ path: `.env` });
 import config from './config';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import config from './config';
     AuthModule,
     UserModule,
     TokenModule,
+    ChatModule,
   ],
 })
 export class AppModule {}

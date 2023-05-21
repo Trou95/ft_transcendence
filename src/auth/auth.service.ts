@@ -17,7 +17,7 @@ export class AuthService {
     const tokenData = await this.getToken(code);
 
     const intraApiService = new IntraApiService(tokenData);
-    const user = await intraApiService.getMe();
+    let user = await intraApiService.getMe();
 
     const userData: UserDto = intraApiService.parseUser(user);
     const intra_id: any = userData.intra_id;
@@ -26,6 +26,8 @@ export class AuthService {
 
     if (!isUserExist) await this.userService.create(userData);
     else await this.userService.update(userData, user.id);
+
+    user = await this.userService.get({ intra_id });
 
     const access_token = this.tokenService.createJwt(
       {
@@ -39,7 +41,7 @@ export class AuthService {
   }
 
   async myAccount(id) {
-    const user = await this.userService.get({ intra_id: id });
+    const user = await this.userService.get({ id });
     return user;
   }
 

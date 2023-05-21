@@ -5,10 +5,11 @@ import { UserModule } from './user/user.module';
 import { TokenModule } from './token/token.module';
 import { User } from './user/user.entity';
 import { config as dotenv } from 'dotenv';
-import { ChatGateway } from './chat/chat.gateway';
 dotenv({ path: `.env` });
 import config from './config';
 import { ChatModule } from './chat/chat.module';
+import { FriendModule } from './friend/friend.module';
+import { Friend } from './friend/entities/friend.entity';
 
 @Module({
   imports: [
@@ -19,13 +20,14 @@ import { ChatModule } from './chat/chat.module';
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [User],
+      entities: [User, Friend],
       synchronize: true,
     }),
     AuthModule,
     UserModule,
     TokenModule,
     ChatModule,
+    FriendModule,
   ],
 })
 export class AppModule {}

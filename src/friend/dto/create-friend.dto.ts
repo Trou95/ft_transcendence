@@ -1,5 +1,12 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import {
+  IS_ENUM,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 import { User } from '../../user/user.entity';
+import { FriendStatus } from '../entities/friend.entity';
 
 export class CreateFriendDto {
   @IsNumber()
@@ -9,4 +16,7 @@ export class CreateFriendDto {
   @IsNumber()
   @IsNotEmpty()
   friend: number;
+
+  @IsEnum(FriendStatus)
+  status: FriendStatus;
 }

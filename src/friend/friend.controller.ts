@@ -3,55 +3,87 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   UseGuards,
+  Query,
+  Put,
 } from '@nestjs/common';
 import { FriendService } from './friend.service';
 import { CreateFriendDto } from './dto/create-friend.dto';
-import { UpdateFriendDto } from './dto/update-friend.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../@decorators/user.decorator';
+import { UserService } from '../user/user.service';
+import { Friend, FriendStatus } from './entities/friend.entity';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('friend')
 export class FriendController {
-  constructor(private readonly friendService: FriendService) {}
+  constructor(
+    private readonly friendService: FriendService,
+    private readonly userService: UserService,
+  ) {}
 
   @Post()
   create(@User() currentUser, @Body() createFriendDto: CreateFriendDto) {
-    console.log(currentUser);
-    createFriendDto.user = 5;
-    console.log(createFriendDto);
+    createFriendDto.user = currentUser.id;
     return this.friendService.create(createFriendDto);
   }
 
   @Get()
-  findAll(@User() currentUser) {
-    return this.friendService.findAll({
+  async findAll(@User() currentUser, @Query('status') status: string) {
+    return await this.friendService.findAll({
       where: {
         user: {
           id: currentUser.id,
         },
-        status: 'accepted',
+        status: status,
       },
       relations: ['friend'],
     });
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.friendService.findOne(+id);
+  @Get('requests')
+  async findRequests(@User() currentUser) {
+    return await this.friendService.findAll({
+      where: {
+        friend: {
+          id: currentUser.id,
+        },
+        status: FriendStatus.PENDING,
+      },
+      relations: ['user'],
+    });
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFriendDto: UpdateFriendDto) {
-    return this.friendService.update(+id, updateFriendDto);
+  @Get('non-friends')
+  async findNonFriends(@User() currentUser) {
+    return await this.userService.findNonFriends(currentUser.id);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.friendService.remove(+id);
+  @Put('/accept/:id')
+  async accept(@User() currentUser, @Param('id') id: number) {
+    const friend: Friend = await this.friendService.findOne({
+      where: {
+        id,
+      },
+      relations: ['user'],
+    });
+
+    await this.friendService.create({
+      user: currentUser.id,
+      friend: friend.user.valueOf(),
+      status: FriendStatus.ACCEPTED,
+    });
+
+    return await this.friendService.update(id, {
+      status: FriendStatus.ACCEPTED,
+    });
+  }
+
+  @Put('/reject/:id')
+  async reject(@Param('id') id: number) {
+    return await this.friendService.update(id, {
+      status: FriendStatus.REJECTED,
+    });
   }
 }

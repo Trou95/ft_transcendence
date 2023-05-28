@@ -20,8 +20,8 @@ export class FriendService {
     return await this.friendRepository.find(query);
   }
 
-  async findOne(id: number) {
-    return await this.friendRepository.findOneByOrFail({ id });
+  async findOne(query: any) {
+    return await this.friendRepository.findOne(query);
   }
 
   async update(id: number, updateFriendDto: UpdateFriendDto) {

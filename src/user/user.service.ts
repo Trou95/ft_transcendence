@@ -21,6 +21,16 @@ export class UserService {
   async getAll(): Promise<User[]> {
     return await this.userRepository.find();
   }
+
+  async findNonFriends(id: number) {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoin('user.friends', 'friend')
+      .where('user.id != :userId', { userId: id })
+      .andWhere('friend.id IS NULL')
+      .getMany();
+  }
+
   async create(user: UserDto): Promise<InsertResult> {
     return await this.userRepository.insert(user);
   }

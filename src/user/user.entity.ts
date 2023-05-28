@@ -23,4 +23,8 @@ export class User {
 
   @Column()
   avatar: string;
+
+  @OneToMany(() => Friend, (friend) => friend.friend)
+  @JoinColumn()
+  friends: Friend[];
 }

@@ -10,6 +10,7 @@ import config from './config';
 import { ChatModule } from './chat/chat.module';
 import { FriendModule } from './friend/friend.module';
 import { Friend } from './friend/entities/friend.entity';
+import { ChannelModule } from './channel/channel.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { Friend } from './friend/entities/friend.entity';
     TokenModule,
     ChatModule,
     FriendModule,
+    ChannelModule,
   ],
 })
 export class AppModule {}

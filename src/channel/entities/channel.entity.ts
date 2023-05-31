@@ -1,4 +1,11 @@
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { User } from '../../user/user.entity';
 
 export enum ChannelType {
   PUBLIC = 'public',
@@ -6,6 +13,7 @@ export enum ChannelType {
   PROTECTED = 'protected',
 }
 
+@Entity()
 export class Channel {
   @PrimaryGeneratedColumn()
   id: number;

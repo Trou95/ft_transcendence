@@ -29,6 +29,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.connectedClients.delete(client.id);
   }
 
+  // direct message
   @SubscribeMessage('connect-user')
   handleConnectUser(client: any, payload: any): any {
     this.connectedClients.set(payload, client.id);
@@ -46,5 +47,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (receiver) {
       this.server.to(receiver).emit('message', payload);
     }
+  }
+
+  // channel message
+  @SubscribeMessage('join-channel')
+  handleJoinChannel(client: any, payload: any): any {
+    const channelId = payload;
+    console.log('joined channel: ', client.id, payload);
+    client.join(channelId.toString());
+  }
+
+  @SubscribeMessage('leave-channel')
+  handleLeaveChannel(client: any, payload: any): any {
+    const channelId = payload;
+    console.log('left channel: ', client.id, payload);
+    client.leave(channelId.toString());
+  }
+
+  @SubscribeMessage('channel-message')
+  handleChannelMessage(client: any, payload: any): any {
+    const channelId: string = payload.channelId.toString();
+    this.server.to(channelId).emit('channel-message', payload);
   }
 }

@@ -11,6 +11,8 @@ import { ChatModule } from './chat/chat.module';
 import { FriendModule } from './friend/friend.module';
 import { Friend } from './friend/entities/friend.entity';
 import { ChannelModule } from './channel/channel.module';
+import { Channel } from './channel/entities/channel.entity';
+import { ChannelUser } from './friend/entities/channel-user.entity';
 
 @Module({
   imports: [
@@ -21,7 +23,7 @@ import { ChannelModule } from './channel/channel.module';
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [User, Friend],
+      entities: [User, Friend, Channel, ChannelUser],
       synchronize: true,
     }),
     AuthModule,

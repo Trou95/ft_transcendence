@@ -1,26 +1,45 @@
 import { Injectable } from '@nestjs/common';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Channel } from './entities/channel.entity';
+import { Repository } from 'typeorm';
+import { ChannelUser } from '../friend/entities/channel-user.entity';
 
 @Injectable()
 export class ChannelService {
-  create(createChannelDto: CreateChannelDto) {
-    return 'This action adds a new channel';
+  constructor(
+    @InjectRepository(Channel)
+    private readonly channelRepository: Repository<Channel>,
+    @InjectRepository(ChannelUser)
+    private readonly channelUserRepository: Repository<ChannelUser>,
+  ) {}
+
+  async create(currentUser: any, createChannelDto: CreateChannelDto) {
+    const channel = await this.channelRepository.insert(createChannelDto);
+    await this.channelUserRepository.insert({
+      channel: channel.identifiers[0].id,
+      user: currentUser.id,
+      is_owner: true,
+      is_admin: true,
+    });
+
+    return channel;
   }
 
-  findAll() {
-    return `This action returns all channel`;
+  async findAll(query: any) {
+    return await this.channelRepository.find(query);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} channel`;
+  async findOne(query: any) {
+    return await this.channelRepository.findOne(query);
   }
 
-  update(id: number, updateChannelDto: UpdateChannelDto) {
-    return `This action updates a #${id} channel`;
+  async update(id: number, updateChannelDto: UpdateChannelDto) {
+    return await this.channelRepository.update({ id }, updateChannelDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} channel`;
+  async remove(id: number) {
+    return await this.channelRepository.delete({ id });
   }
 }

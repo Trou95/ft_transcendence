@@ -13,6 +13,7 @@ import { Friend } from './friend/entities/friend.entity';
 import { ChannelModule } from './channel/channel.module';
 import { Channel } from './channel/entities/channel.entity';
 import { ChannelUser } from './friend/entities/channel-user.entity';
+import { GameModule } from './game/game.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ChannelUser } from './friend/entities/channel-user.entity';
     ChatModule,
     FriendModule,
     ChannelModule,
+    GameModule,
   ],
 })
 export class AppModule {}

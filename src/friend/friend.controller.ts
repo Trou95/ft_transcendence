@@ -14,7 +14,7 @@ import { User } from '../@decorators/user.decorator';
 import { UserService } from '../user/user.service';
 import { Friend, FriendStatus } from './entities/friend.entity';
 import { UseAuth } from 'src/@decorators/auth.decorator';
-import { IJwtPayload } from 'src/interfaces/jwt-payload';
+import { IJwtPayload } from 'src/interfaces/jwt-payload.interface';
 
 @UseAuth()
 @Controller('friend')

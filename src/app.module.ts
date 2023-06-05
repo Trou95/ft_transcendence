@@ -7,6 +7,7 @@ import { ChatModule } from './chat/chat.module';
 import { FriendModule } from './friend/friend.module';
 import { ChannelModule } from './channel/channel.module';
 import { GameModule } from './game/game.module';
+import { CacheModule } from './cache/cache.module';
 import config from './config';
 
 @Module({
@@ -28,6 +29,7 @@ import config from './config';
     FriendModule,
     ChannelModule,
     GameModule,
+    CacheModule,
   ],
 })
 export class AppModule {}

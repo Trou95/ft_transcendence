@@ -12,7 +12,7 @@ import { AuthService } from './auth.service';
 import { CallbackDto } from './dto/callback.dto';
 import { UseAuth } from 'src/@decorators/auth.decorator';
 import { User } from 'src/@decorators/user.decorator';
-import { IJwtPayload } from 'src/interfaces/jwt-payload';
+import { IJwtPayload } from 'src/interfaces/jwt-payload.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -26,7 +26,6 @@ export class AuthController {
   @UseAuth()
   @Get('my-account')
   myAccount(@User() user: IJwtPayload) {
-    console.log(user);
     return this.authService.myAccount(user.id);
   }
 }

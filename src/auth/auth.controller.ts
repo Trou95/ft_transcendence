@@ -10,7 +10,9 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CallbackDto } from './dto/callback.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { UseAuth } from 'src/@decorators/auth.decorator';
+import { User } from 'src/@decorators/user.decorator';
+import { IJwtPayload } from 'src/interfaces/jwt-payload';
 
 @Controller('auth')
 export class AuthController {
@@ -18,20 +20,13 @@ export class AuthController {
 
   @Post('callback')
   async callback(@Body() body: CallbackDto) {
-    try {
-      const access_token = await this.authService.callback(body.code);
-      return {
-        token: access_token,
-      };
-    } catch (error) {
-      console.log(error);
-    }
+    return await this.authService.callback(body.code);
   }
 
+  @UseAuth()
   @Get('my-account')
-  @UseGuards(AuthGuard('jwt'))
-  myAccount(@Request() req) {
-    const user = this.authService.myAccount(req.user.id);
-    return user;
+  myAccount(@User() user: IJwtPayload) {
+    console.log(user);
+    return this.authService.myAccount(user.id);
   }
 }

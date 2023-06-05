@@ -1,29 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { UserDto } from './dto/user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, InsertResult, Repository, UpdateResult } from 'typeorm';
+import {
+  DeleteResult,
+  FindManyOptions,
+  FindOptionsWhere,
+  InsertResult,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 import { User } from './user.entity';
+
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(User) private readonly repository: Repository<User>,
   ) {}
 
-  async isIntraUserExist(id) {
-    const res = await this.get({
-      intra_id: id,
-    });
-    return res != null;
+  async isExist(where: FindOptionsWhere<User>) {
+    return this.repository.exist({ where });
   }
-  async get(where: any): Promise<User> {
-    return await this.userRepository.findOneBy(where);
+
+  async getOne(where: FindOptionsWhere<User>): Promise<User> {
+    return await this.repository.findOneBy(where);
   }
+
   async getAll(): Promise<User[]> {
-    return await this.userRepository.find();
+    return await this.repository.find();
   }
 
   async findNonFriends(id: number) {
-    return await this.userRepository
+    return await this.repository
       .createQueryBuilder('user')
       .leftJoin('user.friends', 'friend')
       .where('user.id != :userId', { userId: id })
@@ -32,14 +39,14 @@ export class UserService {
   }
 
   async create(user: UserDto): Promise<InsertResult> {
-    return await this.userRepository.insert(user);
+    return await this.repository.insert(user);
   }
 
   async update(data: UserDto, where: any): Promise<UpdateResult> {
-    return await this.userRepository.update(where, data);
+    return await this.repository.update(where, data);
   }
 
   async delete(where: any): Promise<DeleteResult> {
-    return await this.userRepository.delete(where);
+    return await this.repository.delete(where);
   }
 }

@@ -1,69 +1,38 @@
 import { Injectable } from '@nestjs/common';
-import { IntraApiService } from '../intraApi/intraApi.service';
-import axios from 'axios';
 import { UserService } from '../user/user.service';
 import { UserDto } from '../user/dto/user.dto';
 import { TokenService } from '../token/token.service';
-import config from '../config';
-import * as process from 'process';
+import { IntraService } from 'src/intra/intra.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
+    private readonly intraService: IntraService,
   ) {}
+
   async callback(code: string) {
-    const tokenData = await this.getToken(code);
+    const intraUser = await this.intraService.getMe(code);
 
-    const intraApiService = new IntraApiService(tokenData);
-    let user = await intraApiService.getMe();
+    const userData: UserDto = this.intraService.parseUser(intraUser);
+    const intra_id = userData.intra_id;
 
-    const userData: UserDto = intraApiService.parseUser(user);
-    const intra_id: any = userData.intra_id;
-
-    const isUserExist = await this.userService.isIntraUserExist(intra_id);
+    const isUserExist = await this.userService.isExist({ intra_id });
 
     if (!isUserExist) await this.userService.create(userData);
-    else await this.userService.update(userData, user.id);
+    else await this.userService.update(userData, intraUser.id);
 
-    user = await this.userService.get({ intra_id });
+    const user = await this.userService.getOne({ intra_id });
 
-    const access_token = this.tokenService.createJwt(
-      {
-        id: user.id,
-        intra_id,
-      },
-      1000 * 60 * 10,
-    );
+    const accessToken = this.tokenService.createJwt({
+      id: user.id,
+    });
 
-    return access_token;
+    return { user, token: accessToken };
   }
 
-  async myAccount(id) {
-    const user = await this.userService.get({ id });
-    return user;
-  }
-
-  async getToken(code: string) {
-    try {
-      const res: any = await axios.post(
-        process.env.TOKEN_URL,
-        {
-          grant_type: 'authorization_code',
-          client_id: process.env.CLIENT_ID,
-          client_secret: process.env.CLIENT_SECRET,
-          redirect_uri: process.env.REDIRECT_URL,
-          code,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept-Encoding': 'identity',
-          },
-        },
-      );
-      return res.data;
-    } catch (error) {}
+  async myAccount(id: number) {
+    return await this.userService.getOne({ id });
   }
 }

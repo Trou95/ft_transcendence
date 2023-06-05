@@ -10,12 +10,13 @@ import {
 } from '@nestjs/common';
 import { FriendService } from './friend.service';
 import { CreateFriendDto } from './dto/create-friend.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { User } from '../@decorators/user.decorator';
 import { UserService } from '../user/user.service';
 import { Friend, FriendStatus } from './entities/friend.entity';
+import { UseAuth } from 'src/@decorators/auth.decorator';
+import { IJwtPayload } from 'src/interfaces/jwt-payload';
 
-@UseGuards(AuthGuard('jwt'))
+@UseAuth()
 @Controller('friend')
 export class FriendController {
   constructor(
@@ -24,13 +25,19 @@ export class FriendController {
   ) {}
 
   @Post()
-  create(@User() currentUser, @Body() createFriendDto: CreateFriendDto) {
+  create(
+    @User() currentUser: IJwtPayload,
+    @Body() createFriendDto: CreateFriendDto,
+  ) {
     createFriendDto.user = currentUser.id;
     return this.friendService.create(createFriendDto);
   }
 
   @Get()
-  async findAll(@User() currentUser, @Query('status') status: string) {
+  async findAll(
+    @User() currentUser: IJwtPayload,
+    @Query('status') status: string,
+  ) {
     return await this.friendService.findAll({
       where: {
         user: {
@@ -43,7 +50,7 @@ export class FriendController {
   }
 
   @Get('requests')
-  async findRequests(@User() currentUser) {
+  async findRequests(@User() currentUser: IJwtPayload) {
     return await this.friendService.findAll({
       where: {
         friend: {
@@ -56,12 +63,12 @@ export class FriendController {
   }
 
   @Get('non-friends')
-  async findNonFriends(@User() currentUser) {
+  async findNonFriends(@User() currentUser: IJwtPayload) {
     return await this.userService.findNonFriends(currentUser.id);
   }
 
   @Put('/accept/:id')
-  async accept(@User() currentUser, @Param('id') id: number) {
+  async accept(@User() currentUser: IJwtPayload, @Param('id') id: number) {
     const friend: Friend = await this.friendService.findOne({
       where: {
         id,

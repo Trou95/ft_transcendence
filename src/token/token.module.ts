@@ -6,7 +6,10 @@ import { TokenService } from './token.service';
 @Module({
   imports: [
     JwtModule.register({
-      secret: '123',
+      secret: config.jwt.secret,
+      signOptions: {
+        expiresIn: config.jwt.expiresIn,
+      },
     }),
   ],
   providers: [TokenService],

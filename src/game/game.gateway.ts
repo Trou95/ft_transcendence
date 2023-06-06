@@ -5,9 +5,11 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   ConnectedSocket,
+  WebSocketServer,
+  OnGatewayInit,
 } from '@nestjs/websockets';
 import { GameService } from './game.service';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway(9000, {
   namespace: 'game',
@@ -15,8 +17,14 @@ import { Socket } from 'socket.io';
     origin: '*',
   },
 })
-export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class GameGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
+{
   constructor(private readonly gameService: GameService) {}
+
+  afterInit(server: Server) {
+    this.gameService.server = server;
+  }
 
   async handleConnection(client: Socket) {
     console.log('Connected Client: ', client.id);
@@ -24,16 +32,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: Socket) {
     console.log('Disconnected:  ', client.id);
-    await this.gameService.removePendingList(client.id);
+    await this.gameService.finishGame(client.id);
   }
 
-  @SubscribeMessage('matchRequest')
-  async matchGame(
-    @MessageBody('id') userId: number,
+  @SubscribeMessage('match')
+  async match(
     @ConnectedSocket() socket: Socket,
+    @MessageBody('id') userId: number,
   ) {
-    await this.gameService.addPendingList(socket, userId);
-    console.log(await this.gameService.getPendingList());
+    console.log('Emit Match ', socket.id);
+    return await this.gameService.match(socket, userId);
+    // await this.gameService.matchUser(socket, userId);
+    // console.log(await this.gameService.getPendingList());
   }
 
   @SubscribeMessage('movePlayer')

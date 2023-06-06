@@ -10,13 +10,12 @@ import {
 } from '@nestjs/common';
 import { FriendService } from './friend.service';
 import { CreateFriendDto } from './dto/create-friend.dto';
+import { AuthGuard } from '@nestjs/passport';
 import { User } from '../@decorators/user.decorator';
 import { UserService } from '../user/user.service';
 import { Friend, FriendStatus } from './entities/friend.entity';
-import { UseAuth } from 'src/@decorators/auth.decorator';
-import { IJwtPayload } from 'src/interfaces/jwt-payload.interface';
 
-@UseAuth()
+@UseGuards(AuthGuard('jwt'))
 @Controller('friend')
 export class FriendController {
   constructor(
@@ -25,32 +24,27 @@ export class FriendController {
   ) {}
 
   @Post()
-  create(
-    @User() currentUser: IJwtPayload,
-    @Body() createFriendDto: CreateFriendDto,
-  ) {
+  create(@User() currentUser, @Body() createFriendDto: CreateFriendDto) {
     createFriendDto.user = currentUser.id;
     return this.friendService.create(createFriendDto);
   }
 
   @Get()
-  async findAll(
-    @User() currentUser: IJwtPayload,
-    @Query('status') status: string,
-  ) {
+  async findAll(@User() currentUser, @Query('status') status: string) {
     return await this.friendService.findAll({
       where: {
         user: {
           id: currentUser.id,
         },
         status: status,
+        is_banned: false,
       },
       relations: ['friend'],
     });
   }
 
   @Get('requests')
-  async findRequests(@User() currentUser: IJwtPayload) {
+  async findRequests(@User() currentUser) {
     return await this.friendService.findAll({
       where: {
         friend: {
@@ -63,12 +57,12 @@ export class FriendController {
   }
 
   @Get('non-friends')
-  async findNonFriends(@User() currentUser: IJwtPayload) {
+  async findNonFriends(@User() currentUser) {
     return await this.userService.findNonFriends(currentUser.id);
   }
 
   @Put('/accept/:id')
-  async accept(@User() currentUser: IJwtPayload, @Param('id') id: number) {
+  async accept(@User() currentUser, @Param('id') id: number) {
     const friend: Friend = await this.friendService.findOne({
       where: {
         id,
@@ -92,5 +86,10 @@ export class FriendController {
     return await this.friendService.update(id, {
       status: FriendStatus.REJECTED,
     });
+  }
+
+  @Put(':id')
+  async update(@Param('id') id: number, @Body() updateFriendDto: any) {
+    return await this.friendService.update(id, updateFriendDto);
   }
 }

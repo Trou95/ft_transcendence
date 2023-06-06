@@ -26,6 +26,9 @@ export class Friend {
   @JoinColumn({ name: 'friend_id' })
   friend: number;
 
+  @Column({ default: false })
+  is_banned: boolean;
+
   @Column({ type: 'enum', enum: FriendStatus, default: FriendStatus.PENDING })
   status: FriendStatus;
 }

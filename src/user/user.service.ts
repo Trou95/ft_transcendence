@@ -3,34 +3,33 @@ import { UserDto } from './dto/user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   DeleteResult,
-  FindManyOptions,
   FindOptionsWhere,
   InsertResult,
   Repository,
   UpdateResult,
 } from 'typeorm';
 import { User } from './user.entity';
-
+import { ChannelUser } from '../friend/entities/channel-user.entity';
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User) private readonly repository: Repository<User>,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
 
   async isExist(where: FindOptionsWhere<User>) {
-    return this.repository.exist({ where });
+    return this.userRepository.exist({ where });
   }
 
   async getOne(where: FindOptionsWhere<User>): Promise<User> {
-    return await this.repository.findOneBy(where);
+    return await this.userRepository.findOneBy(where);
   }
 
   async getAll(): Promise<User[]> {
-    return await this.repository.find();
+    return await this.userRepository.find();
   }
 
   async findNonFriends(id: number) {
-    return await this.repository
+    return await this.userRepository
       .createQueryBuilder('user')
       .leftJoin('user.friends', 'friend')
       .where('user.id != :userId', { userId: id })
@@ -38,15 +37,33 @@ export class UserService {
       .getMany();
   }
 
+  async findNonChannelMembers(currentUser: any, id: number) {
+    console.log(currentUser, id);
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.id != :userId', { userId: currentUser.id })
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('channelUser.user')
+          .from(ChannelUser, 'channelUser')
+          .where('channelUser.channel = :channelId', { channelId: id })
+          .getQuery();
+
+        return 'user.id NOT IN ' + subQuery;
+      })
+      .getMany();
+  }
+
   async create(user: UserDto): Promise<InsertResult> {
-    return await this.repository.insert(user);
+    return await this.userRepository.insert(user);
   }
 
   async update(data: UserDto, where: any): Promise<UpdateResult> {
-    return await this.repository.update(where, data);
+    return await this.userRepository.update(where, data);
   }
 
   async delete(where: any): Promise<DeleteResult> {
-    return await this.repository.delete(where);
+    return await this.userRepository.delete(where);
   }
 }

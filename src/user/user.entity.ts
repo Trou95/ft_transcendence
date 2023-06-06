@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Friend } from '../friend/entities/friend.entity';
+import { ChannelUser } from '../friend/entities/channel-user.entity';
 
 @Entity()
 export class User {
@@ -27,4 +28,8 @@ export class User {
   @OneToMany(() => Friend, (friend) => friend.friend)
   @JoinColumn()
   friends: Friend[];
+
+  @OneToMany(() => ChannelUser, (channelUser) => channelUser.user)
+  @JoinColumn()
+  channels: ChannelUser[];
 }

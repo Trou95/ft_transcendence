@@ -2,6 +2,7 @@ import {
   Column,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -13,13 +14,13 @@ export class ChannelUser {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => Channel)
+  @ManyToOne(() => Channel)
   @JoinColumn({ name: 'channel_id' })
-  channel: number;
+  channel: Channel;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: number;
+  user: User;
 
   @Column({ default: false })
   is_owner: boolean;

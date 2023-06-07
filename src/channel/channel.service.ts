@@ -32,7 +32,7 @@ export class ChannelService {
     const user = await this.channelUserRepository.findOne({
       where: {
         channel: {
-          id: 10,
+          id: channelId,
         },
         user: {
           id: currentUser.id,
@@ -51,6 +51,68 @@ export class ChannelService {
       },
       user: body.userId,
     });
+  }
+
+  async leave(currentUser: any, id: number) {
+    const channelId = parseInt(id.toString());
+    const user = await this.channelUserRepository.findOne({
+      where: {
+        channel: {
+          id: channelId,
+        },
+        user: {
+          id: currentUser.id,
+        },
+      },
+      relations: ['user', 'channel'],
+    });
+
+    if (!user) {
+      throw new ForbiddenException("You don't have permission to leave.");
+    }
+
+    await this.channelUserRepository.delete({
+      channel: {
+        id: channelId,
+      },
+      user: {
+        id: currentUser.id,
+      },
+    });
+  }
+
+  async assignAdmin(currentUser: any, channelId: number, userId: number) {
+    const user = await this.channelUserRepository.findOne({
+      where: {
+        channel: {
+          id: channelId,
+        },
+        user: {
+          id: currentUser.id,
+        },
+      },
+      relations: ['user', 'channel'],
+    });
+
+    if (!user || !user.is_owner) {
+      throw new ForbiddenException(
+        "You don't have permission to assign admin.",
+      );
+    }
+
+    await this.channelUserRepository.update(
+      {
+        channel: {
+          id: channelId,
+        },
+        user: {
+          id: userId,
+        },
+      },
+      {
+        is_admin: true,
+      },
+    );
   }
 
   async findAll(query: any) {

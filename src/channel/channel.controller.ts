@@ -39,6 +39,11 @@ export class ChannelController {
     return await this.channelService.addMember(currentUser, id, body);
   }
 
+  @Post('/leave/:id')
+  async leave(@User() currentUser: any, @Param('id') id: number) {
+    return await this.channelService.leave(currentUser, id);
+  }
+
   @Get()
   async findAll(@User() currentUser: any) {
     return await this.channelService.findAll({
@@ -59,6 +64,15 @@ export class ChannelController {
   @Get('/members/:id')
   async findMembers(@Param('id') id: number) {
     return await this.channelService.findMembers(id);
+  }
+
+  @Put('/assign-admin/:id')
+  async assignAdmin(
+    @User() currentUser,
+    @Param('id') id: number,
+    @Body() body: any,
+  ) {
+    return await this.channelService.assignAdmin(currentUser, id, body.userId);
   }
 
   @Get(':id')

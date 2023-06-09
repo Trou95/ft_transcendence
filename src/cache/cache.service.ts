@@ -15,16 +15,25 @@ enum CacheType {
 export class CacheService {
   constructor(@Inject(CACHE_MANAGER) private readonly cache: Cache) {}
 
-  private async setCache(key: string, value: unknown) {
+  async setCache(key: string, value: unknown) {
     return this.cache.set(key, value, 0);
   }
 
-  private async getCache<T>(key: string) {
+  async getCaches() {
+    return this.cache.store.keys();
+  }
+
+  async getCache<T>(key: string) {
     return this.cache.get<T>(key);
+  }
+
+  async delCache<T>(key: string) {
+    await this.cache.del(key);
   }
 
   // ------------------------
 
+ /*
   async getPendingList() {
     return (await this.getCache<IPendingUser[]>(CacheType.PENDING)) || [];
   }
@@ -47,6 +56,7 @@ export class CacheService {
     return this.getCache<GameRoom>(id);
   }
 
+
   async createRoom(id: string, room: GameRoom) {
     return this.setCache(id, room);
   }
@@ -65,4 +75,6 @@ export class CacheService {
       this.cache.del(room.rivalRoomId),
     ]);
   }
+
+   */
 }

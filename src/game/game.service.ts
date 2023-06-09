@@ -4,6 +4,8 @@ import { UserService } from 'src/user/user.service';
 import { CacheService } from 'src/cache/cache.service';
 import { IPendingUser } from 'src/interfaces/pending-user.interface';
 import { User } from 'src/user/user.entity';
+import Room from "./entities/room.entity";
+import {Game} from "./entities/game.entity";
 
 export interface GameRoom {
   user: User;
@@ -11,12 +13,20 @@ export interface GameRoom {
   rivalRoomId: string;
 }
 
+const ROOM_PREFIX = "R-";
+const GAME_PREFIX = "G-";
+
 @Injectable()
 export class GameService {
+
+  private gamePlayers : Map<string, string>;
   constructor(
     private readonly cacheService: CacheService,
     private readonly userService: UserService,
-  ) {}
+  )
+  {
+    this.gamePlayers = new Map();
+  }
 
   public server: Server;
 
@@ -26,54 +36,107 @@ export class GameService {
   }
 
   async finishGame(roomId: string) {
-    const room1 = await this.cacheService.getRoom(roomId);
+    /*const room1 = await this.cacheService.getRoom(roomId);
 
     if (!room1) {
       return this.cacheService.removePending(roomId);
+
     }
 
     const room2 = await this.cacheService.getRoom(room1.rivalRoomId);
 
     this.server.to(room1.rivalRoomId).emit('finish');
     this.server.to(room2.rivalRoomId).emit('finish');
+    */
   }
 
   async match(socket: Socket, userId: number) {
-    const pendingList = await this.cacheService.getPendingList();
-
-    console.log('Pending List', pendingList);
-
-    if (!pendingList.length) {
-      console.log('Added pending list ', socket.id);
-      return this.cacheService.addPendingList(socket.id, userId);
-    }
-
-    // if (pendingList[0].userId === userId) return;
-
-    const owner = await this.userService.getOne({ id: userId });
-    const rival = await this.userService.getOne({ id: pendingList[0].userId });
-
-    const room1: GameRoom = {
-      user: owner,
-      score: 0,
-      rivalRoomId: pendingList[0].socketId,
-    };
-
-    const room2: GameRoom = {
-      user: rival,
-      score: 0,
-      rivalRoomId: socket.id,
-    };
-
-    await Promise.all([
-      this.cacheService.createRoom(socket.id, room1),
-      this.cacheService.createRoom(pendingList[0].socketId, room2),
-      this.cacheService.removePending(pendingList[0].socketId),
-    ]);
-
-    return this.startGame(room1, room2);
+    await this.findWaitRoom(socket, userId);
   }
 
+
+  async findWaitRoom(socket : Socket, userId : number) {
+    const rooms = await this.findRooms();
+    for(let i = rooms.length - 1; i >= 0; i--)
+    {
+      const room : Room = await this.cacheService.getCache(rooms[i]);
+      if(room.player2 == null) {
+        room.player2 = socket.id;
+        room.player2_id = userId;
+        const user1 = await this.getUser(room.player1_id);
+        const user2 = await this.getUser(room.player2_id);
+        const gameIndex = await this.createGameRoom(room.player1, {
+          player1: room.player1,
+          player2: room.player2,
+          player1_id: room.player1_id,
+          player2_id: room.player2_id,
+          player1_pos: null,
+          player2_pos: null,
+          ball_pos: {
+            X: 500,
+            Y: 500,
+          },
+        });
+        console.log("Game Created: ", gameIndex);
+        await this.gamePlayers.set(room.player1, gameIndex);
+        await this.gamePlayers.set(room.player2, gameIndex);
+        socket.emit("client:start", user1);
+        socket.to(room.player1).emit("client:start", user2);
+        return;
+      }
+    }
+    await this.createRoom(socket.id,
+        {player1: socket.id, player1_id: userId, player2: null});
+  }
+
+  async createGameRoom(key: string, gameRoom : Game)
+  {
+    key = GAME_PREFIX + key;
+    await this.cacheService.setCache(key, gameRoom);
+    return key;
+  }
+
+  async getGameRoom(key : string) : Promise<Game>
+  {
+    return this.cacheService.getCache(key);
+  }
+
+  async getGamePlayers()
+  {
+    return this.gamePlayers;
+  }
+
+  async getGameRooms()
+  {
+    const ret = await this.cacheService.getCaches();
+    return ret.filter(room => room.startsWith(GAME_PREFIX));
+  }
+
+  async createRoom(key : string , room : Room) {
+    console.log("Room Created: ", ROOM_PREFIX + key);
+    await this.cacheService.setCache(ROOM_PREFIX + key, room);
+  }
+  async findRooms() : Promise<string[]>
+  {
+    const ret = await this.cacheService.getCaches();
+    return ret.filter(room => room.startsWith(ROOM_PREFIX));
+  }
+
+  async deleteRoom(key : string) {
+    key = ROOM_PREFIX + key;
+    const rooms = await this.findRooms();
+    const index = rooms.indexOf(key);
+    if(index != -1) {
+      await this.cacheService.delCache(key);
+      console.log("Room Deleted Succesfully", key);
+    }
+  }
+  async getUser(id : number)
+  {
+    return await this.userService.getOne({id: id});
+  }
+
+  /*
   async createRoom() {
     const room: GameRoom = {
       user: {} as any,
@@ -81,6 +144,7 @@ export class GameService {
       rivalRoomId: '2',
     };
   }
+  */
 
   // async addPendingList(socket: Socket, userId: number) {
   //   const user = await this.userService.getOne({ id: userId });

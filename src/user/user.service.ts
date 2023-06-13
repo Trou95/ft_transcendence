@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { ChannelUser } from '../friend/entities/channel-user.entity';
+import { Friend } from '../friend/entities/friend.entity';
 @Injectable()
 export class UserService {
   constructor(
@@ -33,7 +34,16 @@ export class UserService {
       .createQueryBuilder('user')
       .leftJoin('user.friends', 'friend')
       .where('user.id != :userId', { userId: id })
-      .andWhere('friend.id IS NULL')
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('friend.friend')
+          .from(Friend, 'friend')
+          .where('friend.user = :userId', { userId: id })
+          .getQuery();
+
+        return 'user.id NOT IN ' + subQuery;
+      })
       .getMany();
   }
 

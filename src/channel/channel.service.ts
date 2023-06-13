@@ -123,12 +123,45 @@ export class ChannelService {
     const channelId = parseInt(id.toString());
     return await this.channelUserRepository.find({
       where: {
+        is_banned: false,
         channel: {
           id: channelId,
         },
       },
       relations: ['user'],
     });
+  }
+
+  async findMember(id: number, userId: number) {
+    const channelId = parseInt(id.toString());
+    const channelUserId = parseInt(userId.toString());
+    return await this.channelUserRepository.findOne({
+      where: {
+        channel: {
+          id: channelId,
+        },
+        user: {
+          id: channelUserId,
+        },
+      },
+      relations: ['user'],
+    });
+  }
+
+  async updateMember(id: number, userId: number, body: any) {
+    const channelId = parseInt(id.toString());
+    const channelUserId = parseInt(userId.toString());
+    return await this.channelUserRepository.update(
+      {
+        channel: {
+          id: channelId,
+        },
+        user: {
+          id: channelUserId,
+        },
+      },
+      body,
+    );
   }
 
   async findOne(query: any) {

@@ -21,10 +21,14 @@ export class GameGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
 
-  constructor(private readonly gameService: GameService) {}
+  constructor(private readonly gameService: GameService) {
+  }
 
   afterInit(server: Server) {
     this.gameService.server = server;
+    setInterval(() => {
+      this.updateGames(this.gameService);
+    },30);
   }
 
   async handleConnection(client: Socket) {
@@ -35,6 +39,24 @@ export class GameGateway
     console.log('Disconnected:  ', client.id);
     await this.gameService.deleteRoom(client.id);
     //await this.gameService.finishGame(client.id);
+  }
+
+  async updateGames(gameService)
+  {
+
+    const rooms = await this.gameService?.getGameRooms();
+    for(let i = 0; i < rooms.length; i++)
+    {
+      const room = await this.gameService.getGameRoom(rooms[i]);
+      console.log(room);
+      if(room.gameStatus == 1) {
+        //Mirror player
+        //console.log("adasdsa");
+        this.gameService.server.to(room.player1).emit("client:updateGame", room.player2_pos);
+        this.gameService.server.to(room.player2).emit("client:updateGame", room.player1_pos);
+      }
+    }
+
   }
 
   @SubscribeMessage('server:match')
@@ -48,36 +70,22 @@ export class GameGateway
   }
 
   //body : player entity
-  @SubscribeMessage('server:movePlayer')
+  @SubscribeMessage('server:updatePlayer')
   async movePlayer(@ConnectedSocket() socket : Socket, @MessageBody() body : any)
   {
-    const players = await this.gameService.getGamePlayers();
-    console.log(players);
-    const gameId = players.get(socket.id);
-    console.log("Game", gameId, "Socket", socket.id);
-    console.log(await this.gameService.getGameRooms());
+    const gamePlayers = await this.gameService.getGamePlayers();
+    const gameId = gamePlayers.get(socket.id);
+    //console.log("Game", gameId, "Socket", socket.id);
+    //console.log(await this.gameService.getGameRooms());
     const game = await this.gameService.getGameRoom(gameId);
-    console.log(game);
-
-    game.ball_pos = {
-      X: game.ball_pos.X + 1,
-      Y: game.ball_pos.Y + 1,
-    }
+    //console.log(game);
 
     if(game.player1 == socket.id) {
       game.player1_pos = body;
-      socket.to(game.player2).emit("movePlayer", body);
-      socket.to(game.player2).emit("moveBall", game.ball_pos);
     }
     else {
       game.player2_pos = body;
-      socket.to(game.player1).emit("movePlayer", body);
-      socket.to(game.player1).emit("moveBall", game.ball_pos);
     }
-
-
-
-
 
   }
 

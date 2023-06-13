@@ -20,6 +20,15 @@ const GAME_PREFIX = "G-";
 export class GameService {
 
   private gamePlayers : Map<string, string>;
+
+  private readonly PLAYER_WIDTH_SCALE = 0.01;
+  private readonly PLAYER_HEIGTH_SCALE = 0.25;
+  private readonly BALL_SPEED = 1920 * 0.008;
+  private readonly BALL_RADIUS = 1920 * 0.01;
+
+  private playerMarginX = 10;
+  private playerPosY = (1920 / 2) - (1920 * this.PLAYER_HEIGTH_SCALE) / 2;
+
   constructor(
     private readonly cacheService: CacheService,
     private readonly userService: UserService,
@@ -66,22 +75,19 @@ export class GameService {
         const user1 = await this.getUser(room.player1_id);
         const user2 = await this.getUser(room.player2_id);
         const gameIndex = await this.createGameRoom(room.player1, {
-          player1: room.player1,
-          player2: room.player2,
-          player1_id: room.player1_id,
-          player2_id: room.player2_id,
-          player1_pos: null,
-          player2_pos: null,
-          ball_pos: {
-            X: 500,
-            Y: 500,
-          },
+          player1: room.player1, player2: room.player2,
+          player1_id: room.player1_id, player2_id: userId,
         });
+        //Todo: gamestatus fix
+        const game = await this.getGameRoom(gameIndex);
+        game.gameStatus = 1;
+
+        console.log(game.gameStatus);
         console.log("Game Created: ", gameIndex);
         await this.gamePlayers.set(room.player1, gameIndex);
         await this.gamePlayers.set(room.player2, gameIndex);
-        socket.emit("client:start", user1);
-        socket.to(room.player1).emit("client:start", user2);
+        socket.emit("client:startGame", user1);
+        socket.to(room.player1).emit("client:startGame", user2);
         return;
       }
     }
@@ -92,6 +98,23 @@ export class GameService {
   async createGameRoom(key: string, gameRoom : Game)
   {
     key = GAME_PREFIX + key;
+
+    gameRoom.player1_pos = {
+      X: this.playerMarginX,
+      Y: this.playerPosY,
+    };
+    gameRoom.player2_pos = {
+      X: 1920 - this.playerMarginX,
+      Y: this.playerPosY,
+    };
+
+    gameRoom.ball_pos = {
+      X: 1920 / 2,
+      Y: 1080 / 2,
+    };
+    gameRoom.ball_speed = this.BALL_SPEED;
+    gameRoom.gameStatus = 0;
+
     await this.cacheService.setCache(key, gameRoom);
     return key;
   }

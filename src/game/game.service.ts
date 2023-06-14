@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
-import { UserService } from 'src/user/user.service';
-import { CacheService } from 'src/cache/cache.service';
-import { IPendingUser } from 'src/interfaces/pending-user.interface';
-import { User } from 'src/user/user.entity';
+import {Injectable} from '@nestjs/common';
+import {Server, Socket} from 'socket.io';
+import {UserService} from 'src/user/user.service';
+import {CacheService} from 'src/cache/cache.service';
+import {User} from 'src/user/user.entity';
 import Room from "./entities/room.entity";
-import {Game, Vector2} from "./entities/game.entity";
+import {Game, GameStatus, Vector2} from "./entities/game.entity";
 
 export interface GameRoom {
   user: User;
@@ -49,19 +48,24 @@ export class GameService {
     this.server.to(rival.rivalRoomId).emit('start', rival.user);
   }
 
-  async finishGame(roomId: string) {
-    /*const room1 = await this.cacheService.getRoom(roomId);
+  async finishGame(gameRoomKey: string) {
+    const gameCache = await this.cacheService.getCache(gameRoomKey);
+    //console.log(gameCache);
+    if(gameCache) {
+      const game = await this.getGameRoom(gameRoomKey);
 
-    if (!room1) {
-      return this.cacheService.removePending(roomId);
+      this.gamePlayers.delete(game.player1);
+      this.gamePlayers.delete(game.player2);
 
+      this.server.to(game.player1).emit("client:finishGame", [game.player1_score, game.player2_score]);
+      this.server.to(game.player2).emit("client:finishGame", [game.player2_score, game.player1_score]);
+
+      console.log(await this.getGameRooms());
+      console.log("------");
+      await this.cacheService.delCache(gameRoomKey);
+      console.log(await this.getGameRooms());
     }
 
-    const room2 = await this.cacheService.getRoom(room1.rivalRoomId);
-
-    this.server.to(room1.rivalRoomId).emit('finish');
-    this.server.to(room2.rivalRoomId).emit('finish');
-    */
   }
 
   async match(socket: Socket, userId: number) {
@@ -89,11 +93,13 @@ export class GameService {
         });
         //Todo: gamestatus fix
         const game = await this.getGameRoom(gameIndex);
-        game.gameStatus = 1;
+        game.gameStatus = GameStatus.CountDown;
+        game.gameStartTime = Date.now();
         game.ball_speed = await this.setBallRandomDirection(rooms[i]);
         game.player1_score = 0;
         game.player2_score = 0;
 
+        await this.cacheService.delCache(rooms[i]);
         console.log("Game Created: ", gameIndex);
         await this.gamePlayers.set(room.player1, gameIndex);
         await this.gamePlayers.set(room.player2, gameIndex);
@@ -163,13 +169,17 @@ export class GameService {
       const target = ballX <= 0 ? 0 : 1;
       if (target == 0) {
         gameRoom.player2_score++;
-        this.server.to(gameRoom.player2).emit("client:playSound", 1);
-        this.server.to(gameRoom.player1).emit("client:playSound", 1); //Todo: add lose sound
+        if(gameRoom.player2_score == 2)
+          return this.finishGame(gameRoomKey);
+        this.server.to(gameRoom.player2).emit("client:playSound", 1); // 1 = win sound
+        this.server.to(gameRoom.player1).emit("client:playSound", 2); //2 = lose sound
       }
       else {
         gameRoom.player1_score++;
+        if(gameRoom.player1_score == 2)
+          return this.finishGame(gameRoomKey);
         this.server.to(gameRoom.player1).emit("client:playSound", 1);
-        this.server.to(gameRoom.player2).emit("client:playSound", 1); //Todo: add lose sound
+        this.server.to(gameRoom.player2).emit("client:playSound", 2); //Todo: add lose sound
       }
       this.resetBall(gameRoomKey);
       this.server.to(gameRoom.player1).emit("client:setScore", [gameRoom.player1_score,gameRoom.player2_score]);

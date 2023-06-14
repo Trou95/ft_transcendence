@@ -1,16 +1,15 @@
 import {
-  WebSocketGateway,
-  SubscribeMessage,
+  ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  ConnectedSocket,
-  WebSocketServer,
   OnGatewayInit,
+  SubscribeMessage,
+  WebSocketGateway,
 } from '@nestjs/websockets';
-import { GameService } from './game.service';
-import { Server, Socket } from 'socket.io';
-import {Vector2} from "./entities/game.entity";
+import {GameService} from './game.service';
+import {Server, Socket} from 'socket.io';
+import {GameStatus} from "./entities/game.entity";
 
 @WebSocketGateway(9000, {
   namespace: 'game',
@@ -47,7 +46,17 @@ export class GameGateway
 
   async handleDisconnect(client: Socket) {
     console.log('Disconnected:  ', client.id);
-    await this.gameService.deleteRoom(client.id);
+
+    const gamePlayers = await this.gameService.getGamePlayers();
+    console.log(gamePlayers);
+
+    if(gamePlayers.get(client.id)) {
+      const gameRoom = gamePlayers.get(client.id);
+      await this.gameService.finishGame(gameRoom);
+      console.log("Game Finish");
+    }
+    else
+      await this.gameService.deleteRoom(client.id);
     //await this.gameService.finishGame(client.id);
   }
 
@@ -58,8 +67,12 @@ export class GameGateway
     for(let i = 0; i < rooms.length; i++)
     {
       const room = await this.gameService.getGameRoom(rooms[i]);
-      //console.log(room);
-      if(room.gameStatus == 1) {
+
+      if(room.gameStatus == GameStatus.CountDown) {
+        if(room.gameStartTime + 3000 < Date.now())
+          room.gameStatus = GameStatus.Started;
+      }
+      else if(room.gameStatus == GameStatus.Started) {
         //Mirror player
         this.gameService.moveBall(rooms[i]);
 

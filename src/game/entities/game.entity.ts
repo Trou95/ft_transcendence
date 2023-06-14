@@ -1,8 +1,9 @@
 
-enum GameStatus
+export enum GameStatus
 {
     Waiting,
     Started,
+    CountDown,
 
 }
 export interface Vector2
@@ -23,4 +24,5 @@ export class Game {
     ball_pos? : Vector2;
     ball_speed? : Vector2;
     gameStatus? : GameStatus;
+    gameStartTime? : number;
 }

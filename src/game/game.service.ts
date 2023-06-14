@@ -5,7 +5,7 @@ import { CacheService } from 'src/cache/cache.service';
 import { IPendingUser } from 'src/interfaces/pending-user.interface';
 import { User } from 'src/user/user.entity';
 import Room from "./entities/room.entity";
-import {Game} from "./entities/game.entity";
+import {Game, Vector2} from "./entities/game.entity";
 
 export interface GameRoom {
   user: User;
@@ -19,13 +19,18 @@ const GAME_PREFIX = "G-";
 @Injectable()
 export class GameService {
 
+  private readonly SCREEN_WIDTH : number  = 1920;
+  private readonly SCREEN_HEIGTH : number = 1080;
+  private BALL_SPEED_X : number = this.SCREEN_HEIGTH * 0.008;
+  private BALL_SPEED_Y : number = this.SCREEN_HEIGTH * 0.008;
+  private BALL_RADIUS : number = this.SCREEN_WIDTH * 0.01;
+
   private gamePlayers : Map<string, string>;
 
   private readonly PLAYER_WIDTH_SCALE = 0.01;
   private readonly PLAYER_HEIGTH_SCALE = 0.25;
-  private readonly BALL_SPEED = 1920 * 0.008;
-  private readonly BALL_RADIUS = 1920 * 0.01;
 
+  //TODO: fix naming
   private playerMarginX = 10;
   private playerPosY = (1920 / 2) - (1920 * this.PLAYER_HEIGTH_SCALE) / 2;
 
@@ -77,12 +82,18 @@ export class GameService {
         const gameIndex = await this.createGameRoom(room.player1, {
           player1: room.player1, player2: room.player2,
           player1_id: room.player1_id, player2_id: userId,
+          ball_pos: {
+            X: this.SCREEN_WIDTH / 2,
+            Y: this.SCREEN_HEIGTH / 2,
+          }
         });
         //Todo: gamestatus fix
         const game = await this.getGameRoom(gameIndex);
         game.gameStatus = 1;
+        game.ball_speed = await this.setBallRandomDirection(rooms[i]);
+        game.player1_score = 0;
+        game.player2_score = 0;
 
-        console.log(game.gameStatus);
         console.log("Game Created: ", gameIndex);
         await this.gamePlayers.set(room.player1, gameIndex);
         await this.gamePlayers.set(room.player2, gameIndex);
@@ -112,7 +123,7 @@ export class GameService {
       X: 1920 / 2,
       Y: 1080 / 2,
     };
-    gameRoom.ball_speed = this.BALL_SPEED;
+    //gameRoom.ball_speed = this.BALL_SPEED;
     gameRoom.gameStatus = 0;
 
     await this.cacheService.setCache(key, gameRoom);
@@ -135,6 +146,55 @@ export class GameService {
     return ret.filter(room => room.startsWith(GAME_PREFIX));
   }
 
+
+  async moveBall(gameRoomKey : string) {
+    const gameRoom : Game = await this.getGameRoom(gameRoomKey);
+
+    gameRoom.ball_pos.X += gameRoom.ball_speed.X;
+    gameRoom.ball_pos.Y += gameRoom.ball_speed.Y;
+
+    const ballX = gameRoom.ball_pos.X + (gameRoom.ball_speed.X > 0 ? this.BALL_RADIUS : -this.BALL_RADIUS);
+    const ballY = gameRoom.ball_pos.Y + (gameRoom.ball_speed.Y > 0 ? this.BALL_RADIUS : -this.BALL_RADIUS);
+
+
+    if (ballY < 0 || ballY > this.SCREEN_HEIGTH) //When ball hits up/down corners
+      gameRoom.ball_speed.Y = -gameRoom.ball_speed.Y;
+    else if(ballX <= 0 || ballX > this.SCREEN_WIDTH) {
+      const target = ballX <= 0 ? 0 : 1;
+      if (target == 0) {
+        gameRoom.player2_score++;
+        this.server.to(gameRoom.player2).emit("client:playSound", 1);
+        this.server.to(gameRoom.player1).emit("client:playSound", 1); //Todo: add lose sound
+      }
+      else {
+        gameRoom.player1_score++;
+        this.server.to(gameRoom.player1).emit("client:playSound", 1);
+        this.server.to(gameRoom.player2).emit("client:playSound", 1); //Todo: add lose sound
+      }
+      this.resetBall(gameRoomKey);
+      this.server.to(gameRoom.player1).emit("client:setScore", [gameRoom.player1_score,gameRoom.player2_score]);
+      this.server.to(gameRoom.player2).emit("client:setScore", [gameRoom.player2_score,gameRoom.player1_score]);
+    }
+  }
+
+  async setBallRandomDirection(gameRoomKey : string): Promise<Vector2> {
+    const gameRoom = await this.getGameRoom(gameRoomKey);
+    return {
+      X: Math.random() > 0.5 ?  this.SCREEN_WIDTH * 0.002 : this.SCREEN_WIDTH * -0.002,
+      Y: this.SCREEN_HEIGTH * 0.008,
+    }
+  }
+
+  async resetBall(gameRoomKey : string) {
+    const gameRoom : Game = await this.getGameRoom(gameRoomKey);
+
+    gameRoom.ball_pos = {
+      X: this.SCREEN_WIDTH / 2,
+      Y: this.SCREEN_HEIGTH / 2,
+    }
+    gameRoom.ball_speed = await this.setBallRandomDirection(gameRoomKey);
+  }
+
   async createRoom(key : string , room : Room) {
     console.log("Room Created: ", ROOM_PREFIX + key);
     await this.cacheService.setCache(ROOM_PREFIX + key, room);
@@ -144,7 +204,6 @@ export class GameService {
     const ret = await this.cacheService.getCaches();
     return ret.filter(room => room.startsWith(ROOM_PREFIX));
   }
-
   async deleteRoom(key : string) {
     key = ROOM_PREFIX + key;
     const rooms = await this.findRooms();
@@ -159,45 +218,4 @@ export class GameService {
     return await this.userService.getOne({id: id});
   }
 
-  /*
-  async createRoom() {
-    const room: GameRoom = {
-      user: {} as any,
-      score: 0,
-      rivalRoomId: '2',
-    };
-  }
-  */
-
-  // async addPendingList(socket: Socket, userId: number) {
-  //   const user = await this.userService.getOne({ id: userId });
-  //   // await this.cacheService.addPandingUser(socket.id, user);
-  //   // return;
-  //   // if (!pending) {
-  //   //   return this.cache.set('pending', { userId, socketId: socket.id });
-  //   // }
-  //   // await this.cache.del('pending');
-  //   // const [opponent, owner] = await Promise.all([
-  //   //   this.userService.getOne({ id: pending.userId }),
-  //   //   this.userService.getOne({ id: userId }),
-  //   // ]);
-
-  //   // const scoreBoard: IScoreBoard = {
-  //   //   [pending.socketId]: {
-  //   //     user: opponent,
-  //   //     score: 0,
-  //   //   },
-  //   //   [socket.id]: {
-  //   //     user: owner,
-  //   //     score: 0,
-  //   //   },
-  //   // };
-
-  //   // await this.addScoreBoard(scoreBoard);
-  //   // socket.emit('start', { socketId: pending.socketId, user: opponent });
-  //   // socket
-  //   //   .to(pending.socketId)
-  //   //   .emit('start', { socketId: socket.id, user: owner });
-  //   // console.log(await this.cache.get('scoreBoard'));
-  // }
 }

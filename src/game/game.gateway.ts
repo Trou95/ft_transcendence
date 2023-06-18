@@ -56,6 +56,8 @@ export class GameGateway
       const playerId = game.player1 == client.id ? game.player2 : game.player1;
 
 
+
+      await this.gameService.delOnlineUser(game.player1 == client.id ? game.player1_id : game.player2_id);
       await this.gameService.finishGame(gameRoom, playerId);
       console.log("Game Finish");
     }
@@ -99,6 +101,7 @@ export class GameGateway
     @MessageBody('id') userId: number,
   ) {
     const user = await this.gameService.getUser(userId);
+    await this.gameService.addOnlineUser(userId);
     console.log('Emit Match ', socket.id, "User", user.full_name);
     return await this.gameService.match(socket, userId);
   }

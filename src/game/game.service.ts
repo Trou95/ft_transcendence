@@ -235,4 +235,20 @@ export class GameService {
     return await this.userService.getOne({id: id});
   }
 
+  async addOnlineUser(id : number) {
+    const users : number[] = await this.cacheService.getCache("Online-Users");
+    const user = users.find(u => u == id);
+    if(!user)
+      await this.cacheService.setCache("Online-Users", [...users, id]);
+  }
+
+  async delOnlineUser(id : number) {
+    let users : number[] = await this.cacheService.getCache("Online-Users");
+    const user = users.find(u => u == id);
+    if(user) {
+      users = users.filter(number => number !== id);
+      await this.cacheService.setCache("Online-Users", users);
+    }
+  }
+
 }

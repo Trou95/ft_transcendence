@@ -52,7 +52,11 @@ export class GameGateway
 
     if(gamePlayers.get(client.id)) {
       const gameRoom = gamePlayers.get(client.id);
-      await this.gameService.finishGame(gameRoom);
+      const game = await this.gameService.getGameRoom(gameRoom);
+      const playerId = game.player1 == client.id ? game.player2 : game.player1;
+
+
+      await this.gameService.finishGame(gameRoom, playerId);
       console.log("Game Finish");
     }
     else

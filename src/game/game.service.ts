@@ -48,11 +48,18 @@ export class GameService {
     this.server.to(rival.rivalRoomId).emit('start', rival.user);
   }
 
-  async finishGame(gameRoomKey: string) {
+  async finishGame(gameRoomKey: string, playerId?: string) {
     const gameCache = await this.cacheService.getCache(gameRoomKey);
     //console.log(gameCache);
     if(gameCache) {
       const game = await this.getGameRoom(gameRoomKey);
+
+      if(playerId) {
+        if(game.player1 == playerId)
+          game.player1_score = -1
+        else
+          game.player2_score = -1;
+      }
 
       this.gamePlayers.delete(game.player1);
       this.gamePlayers.delete(game.player2);

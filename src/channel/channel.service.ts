@@ -2,9 +2,10 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Channel } from './entities/channel.entity';
+import { Channel, ChannelType } from './entities/channel.entity';
 import { Repository } from 'typeorm';
 import { ChannelUser } from '../friend/entities/channel-user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ChannelService {
@@ -169,6 +170,12 @@ export class ChannelService {
   }
 
   async update(id: number, updateChannelDto: UpdateChannelDto) {
+    if (updateChannelDto.type === ChannelType.PROTECTED) {
+      updateChannelDto.password = await bcrypt.hash(
+        updateChannelDto.password,
+        10,
+      );
+    }
     return await this.channelRepository.update({ id }, updateChannelDto);
   }
 

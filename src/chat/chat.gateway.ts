@@ -5,6 +5,8 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { ChannelService } from '../channel/channel.service';
+import { ChannelUser } from '../friend/entities/channel-user.entity';
 
 @WebSocketGateway(9000, {
   namespace: 'chat',
@@ -16,6 +18,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server;
 
   private connectedClients = new Map<number, any>();
+
+  constructor(private readonly channelService: ChannelService) {}
 
   afterInit(): void {
     console.log('websocket initialized ');
@@ -65,7 +69,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('channel-message')
-  handleChannelMessage(client: any, payload: any): any {
+  async handleChannelMessage(client: any, payload: any) {
+    const channel = await this.channelService.findMember(
+      payload.channelId,
+      payload.userId,
+    );
+
+    if (channel.is_banned || channel.is_muted) {
+      client.disconnect();
+      return;
+    }
+
     const channelId: string = payload.channelId.toString();
     this.server.to(channelId).emit('channel-message', payload);
   }

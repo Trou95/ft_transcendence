@@ -9,6 +9,7 @@ import { ChannelModule } from './channel/channel.module';
 import { GameModule } from './game/game.module';
 import { CacheModule } from './cache/cache.module';
 import config from './config';
+import {MatchModule} from "./match/match.module";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import config from './config';
     ChannelModule,
     GameModule,
     CacheModule,
+    MatchModule,
   ],
 })
 export class AppModule {}

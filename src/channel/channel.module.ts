@@ -7,9 +7,10 @@ import { ChannelUser } from '../friend/entities/channel-user.entity';
 import { User } from '../user/user.entity';
 import { UserService } from '../user/user.service';
 import { UserModule } from '../user/user.module';
+import {MatchModule} from "../match/match.module";
 
 @Module({
-  imports: [UserModule, TypeOrmModule.forFeature([Channel, ChannelUser, User])],
+  imports: [UserModule, TypeOrmModule.forFeature([Channel, ChannelUser, User]), MatchModule],
   controllers: [ChannelController],
   providers: [ChannelService, UserService],
 })

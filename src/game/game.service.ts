@@ -5,6 +5,7 @@ import { CacheService } from 'src/cache/cache.service';
 import { User } from 'src/user/user.entity';
 import Room from './entities/room.entity';
 import { Game, GameStatus, Vector2 } from './entities/game.entity';
+import {MatchService} from "../match/match.service";
 
 export interface GameRoom {
   user: User;
@@ -35,6 +36,7 @@ export class GameService {
   constructor(
     private readonly cacheService: CacheService,
     private readonly userService: UserService,
+    private readonly matchService: MatchService,
   ) {
     this.gamePlayers = new Map();
   }
@@ -56,6 +58,13 @@ export class GameService {
         if (game.player1 == playerId) game.player1_score = -1;
         else game.player2_score = -1;
       }
+      else this.matchService.create({
+        player1: game.player1_id,
+        player2: game.player2_id,
+        score1: game.player1_score,
+        score2: game.player2_score
+      });
+
 
       this.gamePlayers.delete(game.player1);
       this.gamePlayers.delete(game.player2);
@@ -67,10 +76,7 @@ export class GameService {
         .to(game.player2)
         .emit('client:finishGame', [game.player2_score, game.player1_score]);
 
-      console.log(await this.getGameRooms());
-      console.log('------');
       await this.cacheService.delCache(gameRoomKey);
-      console.log(await this.getGameRooms());
     }
   }
 

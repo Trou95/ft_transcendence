@@ -11,10 +11,12 @@ import {
 import { User } from './user.entity';
 import { ChannelUser } from '../friend/entities/channel-user.entity';
 import { Friend } from '../friend/entities/friend.entity';
+import {MatchService} from "../match/match.service";
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly matchService: MatchService,
   ) {}
 
   async isExist(where: FindOptionsWhere<User>) {
@@ -63,6 +65,14 @@ export class UserService {
         return 'user.id NOT IN ' + subQuery;
       })
       .getMany();
+  }
+
+  async getMatchHistory(id: number) {
+    return await this.matchService.getMatchHistory(id);
+  }
+
+  async getTotalWins() {
+    return await this.matchService.getTotalWins();
   }
 
   async create(user: UserDto): Promise<InsertResult> {

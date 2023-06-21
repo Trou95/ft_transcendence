@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Friend } from '../friend/entities/friend.entity';
 import { ChannelUser } from '../friend/entities/channel-user.entity';
+import {Match} from "../match/entities/match.entity";
 
 @Entity()
 export class User {
@@ -32,4 +33,5 @@ export class User {
   @OneToMany(() => ChannelUser, (channelUser) => channelUser.user)
   @JoinColumn()
   channels: ChannelUser[];
+
 }

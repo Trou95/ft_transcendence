@@ -6,6 +6,7 @@ import { User } from 'src/user/user.entity';
 import Room from './entities/room.entity';
 import { Game, GameStatus, Vector2 } from './entities/game.entity';
 import {MatchService} from "../match/match.service";
+import {use} from "passport";
 
 export interface GameRoom {
   user: User;
@@ -80,14 +81,19 @@ export class GameService {
     }
   }
 
-  async match(socket: Socket, userId: number) {
-    await this.findWaitRoom(socket, userId);
+  async match(socket: Socket, userId: number, invite?: string) {
+    if(invite == undefined)
+      await this.findWaitRoom(socket, userId);
+    else
+      await this.inviteJoinRoom(socket, invite, userId);
   }
 
   async findWaitRoom(socket: Socket, userId: number) {
     const rooms = await this.findRooms();
     for (let i = rooms.length - 1; i >= 0; i--) {
       const room: Room = await this.cacheService.getCache(rooms[i]);
+      if(room.is_private)
+        continue;
       if (room.player2 == null) {
         room.player2 = socket.id;
         room.player2_id = userId;
@@ -124,6 +130,48 @@ export class GameService {
       player1: socket.id,
       player1_id: userId,
       player2: null,
+    });
+  }
+
+  async inviteJoinRoom(socket: Socket, key: string, userId : number, is_prvt = false) {
+    const room : Room = await this.cacheService.getCache(ROOM_PREFIX + key);
+    console.log(userId);
+    if (room && room.player2 == null) {
+      room.player2 = socket.id;
+      room.player2_id = userId;
+      const user1 = await this.getUser(room.player1_id);
+      const user2 = await this.getUser(room.player2_id);
+      const gameIndex = await this.createGameRoom(room.player1, {
+        player1: room.player1,
+        player2: room.player2,
+        player1_id: room.player1_id,
+        player2_id: userId,
+        ball_pos: {
+          X: this.SCREEN_WIDTH / 2,
+          Y: this.SCREEN_HEIGTH / 2,
+        },
+      });
+      //Todo: gamestatus fix
+      const game = await this.getGameRoom(gameIndex);
+      game.gameStatus = GameStatus.CountDown;
+      game.gameStartTime = Date.now();
+      game.ball_speed = await this.setBallRandomDirection(key);
+      game.player1_score = 0;
+      game.player2_score = 0;
+
+      await this.cacheService.delCache(key);
+      console.log('Game Created: ', gameIndex);
+      await this.gamePlayers.set(room.player1, gameIndex);
+      await this.gamePlayers.set(room.player2, gameIndex);
+      socket.emit('client:startGame', user1);
+      socket.to(room.player1).emit('client:startGame', user2);
+    }
+    else
+    await this.createRoom(key, {
+      player1: socket.id,
+      player1_id: userId,
+      player2: null,
+      is_private: true,
     });
   }
 
@@ -263,5 +311,15 @@ export class GameService {
       users = users.filter((number) => number !== id);
       await this.cacheService.setCache('Online-Users', users);
     }
+  }
+
+  async createKey() {
+    const KEY_LEN = 10;
+    let key;
+
+    const KEYS = "ABCDEFGHIJKLMNOPRSTUVYZXWabcdefghijklmnoprstvyzxw123456789";
+    for(let i = 0; i < KEY_LEN; i++)
+      key += Math.floor(Math.random() % KEYS.length);
+    return key;
   }
 }

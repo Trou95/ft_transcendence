@@ -6,4 +6,5 @@ export default interface Room {
     //player id
     player1_id? :  number,
     player2_id? : number,
+    is_private? : boolean,
 }

@@ -9,9 +9,9 @@ import { IJwtPayload } from 'src/interfaces/jwt-payload.interface';
 export class GameController {
   constructor(private readonly gameService: GameService) {}
 
-  @Get()
-  async getAllPendingUsers(@User() user: IJwtPayload) {
-    // const list = await this.gameService.getPendingList();
-    // return list.filter((x) => x.user.id !== user.id);
+  @Get("create-match")
+  async create() {
+      return await this.gameService.createKey();
   }
+
 }

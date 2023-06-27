@@ -98,12 +98,13 @@ export class GameGateway
   @SubscribeMessage('server:match')
   async match(
     @ConnectedSocket() socket: Socket,
-    @MessageBody('id') userId: number,
+    @MessageBody() body
   ) {
-    const user = await this.gameService.getUser(userId);
-    await this.gameService.addOnlineUser(userId);
-    console.log('Emit Match ', socket.id, "User", user.full_name);
-    return await this.gameService.match(socket, userId);
+    //Normal Play Duzeltilecek Matchmaking
+    const user = await this.gameService.getUser(body.id);
+    await this.gameService.addOnlineUser(body.id);
+    console.log('Emit Match ', socket.id, "User", user.full_name, body.id);
+    return await this.gameService.match(socket, body.id, body.invite);
   }
 
   //body : player entity
@@ -112,10 +113,7 @@ export class GameGateway
   {
     const gamePlayers = await this.gameService.getGamePlayers();
     const gameId = gamePlayers.get(socket.id);
-    //console.log("Game", gameId, "Socket", socket.id);
-    //console.log(await this.gameService.getGameRooms());
     const game = await this.gameService.getGameRoom(gameId);
-    //console.log(game);
 
     if(game.player1 == socket.id) {
       game.player1_pos = body;

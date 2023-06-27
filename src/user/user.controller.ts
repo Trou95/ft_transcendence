@@ -11,7 +11,6 @@ export class UserController {
   @Get("match-history")
   async getMatchHistory(@User() user){
     const res =  await this.userService.getMatchHistory(user.id);
-    //console.log(res);
     return await this.userService.getMatchHistory(user.id);
   }
 

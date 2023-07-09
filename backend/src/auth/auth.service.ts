@@ -27,6 +27,7 @@ export class AuthService {
 
     const accessToken = this.tokenService.createJwt({
       id: user.id,
+      token: intraUser.token,
     });
 
     return { user, token: accessToken };

@@ -10,7 +10,7 @@ export class IntraService {
     baseURL: config.intra.apiUrl,
   });
 
-  private async setIntraToken(code: string) {
+  private async createIntraToken(code: string) {
     const res = await axios.post(
       config.intra.tokenUrl,
       {
@@ -28,20 +28,38 @@ export class IntraService {
       },
     );
     const token: IIntraToken = res.data;
-
     this.intraApiService.defaults.headers.common.Authorization = `Bearer ${token.access_token}`;
+    return token.access_token;
   }
 
   async getMe(code: string): Promise<any> {
-    await this.setIntraToken(code);
+    const intraToken = await this.createIntraToken(code);
 
     const res = await this.intraApiService.get('/me');
-    return res.data;
+    return {...res.data, token: intraToken}
+  }
+
+  async getAllUsers(token: string) {
+    this.intraApiService.defaults.headers.common.Authorization = `Bearer ${token}`;
+
+    const res = await this.intraApiService.get("/campus/49");
+    const userCount = res.data.users_count;
+
+    console.log(userCount);
+
+    let users = [];
+    for(let i = 0; i < userCount / 30; i++) {
+      console.log(i);
+      const res : any = await this.intraApiService.get(`/campus/49/users?page=${i}`);
+      users = [...users,res.data.map(user => user.login)];
+    }
+    return users;
   }
 
   parseUser(user: any): UserDto {
     return {
       intra_id: user.id,
+      login: user.login,
       full_name: user.displayname,
       email: user.email,
       avatar: user.image.link,

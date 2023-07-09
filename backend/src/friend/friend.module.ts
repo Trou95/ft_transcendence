@@ -7,9 +7,10 @@ import { UserModule } from '../user/user.module';
 import { UserService } from '../user/user.service';
 import { User } from '../user/user.entity';
 import {MatchModule} from "../match/match.module";
+import {IntraModule} from "../intra/intra.module";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Friend, User]), UserModule, MatchModule],
+  imports: [TypeOrmModule.forFeature([Friend, User]), UserModule, IntraModule, MatchModule],
   controllers: [FriendController],
   providers: [FriendService, UserService],
   exports: [FriendService],

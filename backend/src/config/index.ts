@@ -1,4 +1,9 @@
+import * as process from "process";
+
 const config = {
+  app: {
+    port: process.env.PORT
+  },
   intra: {
     clientId: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,

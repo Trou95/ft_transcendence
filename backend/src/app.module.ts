@@ -10,6 +10,8 @@ import { GameModule } from './game/game.module';
 import { CacheModule } from './cache/cache.module';
 import config from './config';
 import {MatchModule} from "./match/match.module";
+import { join } from 'path';
+import {ServeStaticModule} from "@nestjs/serve-static";
 
 @Module({
   imports: [
@@ -32,6 +34,9 @@ import {MatchModule} from "./match/match.module";
     GameModule,
     CacheModule,
     MatchModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
   ],
 })
 export class AppModule {}

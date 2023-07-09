@@ -7,7 +7,6 @@ import {
 } from 'typeorm';
 import { Friend } from '../friend/entities/friend.entity';
 import { ChannelUser } from '../friend/entities/channel-user.entity';
-import {Match} from "../match/entities/match.entity";
 
 @Entity()
 export class User {
@@ -16,6 +15,9 @@ export class User {
 
   @Column({ unique: true })
   intra_id: number;
+
+  @Column({ unique: true })
+  login: string;
 
   @Column()
   full_name: string;

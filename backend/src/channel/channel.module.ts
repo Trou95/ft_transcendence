@@ -8,9 +8,10 @@ import { User } from '../user/user.entity';
 import { UserService } from '../user/user.service';
 import { UserModule } from '../user/user.module';
 import {MatchModule} from "../match/match.module";
+import {IntraModule} from "../intra/intra.module";
 
 @Module({
-  imports: [UserModule, TypeOrmModule.forFeature([Channel, ChannelUser, User]), MatchModule],
+  imports: [UserModule, TypeOrmModule.forFeature([Channel, ChannelUser, User]), IntraModule, MatchModule],
   controllers: [ChannelController],
   providers: [ChannelService, UserService],
 })

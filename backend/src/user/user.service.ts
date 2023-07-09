@@ -12,10 +12,13 @@ import { User } from './user.entity';
 import { ChannelUser } from '../friend/entities/channel-user.entity';
 import { Friend } from '../friend/entities/friend.entity';
 import {MatchService} from "../match/match.service";
+import {IntraService} from "../intra/intra.service";
+import {UpdateProfileDto} from "./dto/update-profile.dto";
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly intraService: IntraService,
     private readonly matchService: MatchService,
   ) {}
 
@@ -85,5 +88,9 @@ export class UserService {
 
   async delete(where: any): Promise<DeleteResult> {
     return await this.userRepository.delete(where);
+  }
+
+  async updateProfile(user_id: number, data: UpdateProfileDto) {
+    return await this.userRepository.update({id: user_id}, data);
   }
 }

@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
-import { UserService } from 'src/user/user.service';
-import { CacheService } from 'src/cache/cache.service';
-import { User } from 'src/user/user.entity';
+import {Injectable} from '@nestjs/common';
+import {Server, Socket} from 'socket.io';
+import {UserService} from 'src/user/user.service';
+import {CacheService} from 'src/cache/cache.service';
+import {User} from 'src/user/user.entity';
 import Room from './entities/room.entity';
-import { Game, GameStatus, Vector2 } from './entities/game.entity';
+import {Game, GameStatus, Vector2} from './entities/game.entity';
 import {MatchService} from "../match/match.service";
-import {use} from "passport";
 
 export interface GameRoom {
   user: User;
@@ -105,19 +104,16 @@ export class GameService {
           player2: room.player2,
           player1_id: room.player1_id,
           player2_id: userId,
+          player1_score: 0,
+          player2_score: 0,
           ball_pos: {
             X: this.SCREEN_WIDTH / 2,
             Y: this.SCREEN_HEIGTH / 2,
           },
+          gameStatus: GameStatus.CountDown,
+          gameStartTime: Date.now()
         });
-        //Todo: gamestatus fix
         const game = await this.getGameRoom(gameIndex);
-        game.gameStatus = GameStatus.CountDown;
-        game.gameStartTime = Date.now();
-        game.ball_speed = await this.setBallRandomDirection(rooms[i]);
-        game.player1_score = 0;
-        game.player2_score = 0;
-
         await this.cacheService.delCache(rooms[i]);
         console.log('Game Created: ', gameIndex);
         await this.gamePlayers.set(room.player1, gameIndex);
@@ -136,7 +132,6 @@ export class GameService {
 
   async inviteJoinRoom(socket: Socket, key: string, userId : number, is_prvt = false) {
     const room : Room = await this.cacheService.getCache(ROOM_PREFIX + key);
-    console.log(userId);
     if (room && room.player2 == null) {
       room.player2 = socket.id;
       room.player2_id = userId;
@@ -151,21 +146,17 @@ export class GameService {
           X: this.SCREEN_WIDTH / 2,
           Y: this.SCREEN_HEIGTH / 2,
         },
+        gameStatus: GameStatus.CountDown,
+        gameStartTime: Date.now(),
       });
-      //Todo: gamestatus fix
       const game = await this.getGameRoom(gameIndex);
-      game.gameStatus = GameStatus.CountDown;
-      game.gameStartTime = Date.now();
-      game.ball_speed = await this.setBallRandomDirection(key);
-      game.player1_score = 0;
-      game.player2_score = 0;
-
-      await this.cacheService.delCache(key);
+      await this.deleteRoom(ROOM_PREFIX + key);
       console.log('Game Created: ', gameIndex);
       await this.gamePlayers.set(room.player1, gameIndex);
       await this.gamePlayers.set(room.player2, gameIndex);
       socket.emit('client:startGame', user1);
       socket.to(room.player1).emit('client:startGame', user2);
+      return
     }
     else
     await this.createRoom(key, {
@@ -187,13 +178,13 @@ export class GameService {
       X: 1920 - this.playerMarginX,
       Y: this.playerPosY,
     };
-
     gameRoom.ball_pos = {
       X: 1920 / 2,
       Y: 1080 / 2,
     };
-    //gameRoom.ball_speed = this.BALL_SPEED;
-    gameRoom.gameStatus = 0;
+    gameRoom.player1_score = 0;
+    gameRoom.player2_score = 0;
+    gameRoom.ball_speed = await this.setBallRandomDirection(key);
 
     await this.cacheService.setCache(key, gameRoom);
     return key;

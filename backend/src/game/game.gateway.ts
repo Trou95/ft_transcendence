@@ -53,7 +53,7 @@ export class GameGateway
     if(gamePlayers.get(client.id)) {
       const gameRoom = gamePlayers.get(client.id);
       const game = await this.gameService.getGameRoom(gameRoom);
-      const playerId = game.player1 == client.id ? game.player2 : game.player1;
+      const playerId = game.player1 == client.id ? game.player1 : game.player2;
 
       await this.gameService.delOnlineUser(game.player1 == client.id ? game.player1_id : game.player2_id);
       await this.gameService.finishGame(gameRoom, playerId);

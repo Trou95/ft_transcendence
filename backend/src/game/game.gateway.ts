@@ -55,15 +55,14 @@ export class GameGateway
       const game = await this.gameService.getGameRoom(gameRoom);
       const playerId = game.player1 == client.id ? game.player2 : game.player1;
 
-
-
       await this.gameService.delOnlineUser(game.player1 == client.id ? game.player1_id : game.player2_id);
       await this.gameService.finishGame(gameRoom, playerId);
       console.log("Game Finish");
     }
-    else
-      await this.gameService.deleteRoom(client.id);
-    //await this.gameService.finishGame(client.id);
+    else {
+      const room = await this.gameService.findRoomByClientId(client.id);
+      await this.gameService.deleteRoom(room);
+    }
   }
 
   async updateGames(gameService)
@@ -79,7 +78,6 @@ export class GameGateway
           room.gameStatus = GameStatus.Started;
       }
       else if(room.gameStatus == GameStatus.Started) {
-        //Mirror player
         this.gameService.moveBall(rooms[i]);
 
         let ballMirrorX;
@@ -107,7 +105,6 @@ export class GameGateway
     return await this.gameService.match(socket, body.id, body.invite);
   }
 
-  //body : player entity
   @SubscribeMessage('server:updatePlayer')
   async movePlayer(@ConnectedSocket() socket : Socket, @MessageBody() body : any)
   {

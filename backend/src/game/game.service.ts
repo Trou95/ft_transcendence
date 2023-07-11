@@ -25,14 +25,16 @@ export class GameService {
   private BALL_SPEED_Y: number = this.SCREEN_HEIGTH * 0.008;
   private BALL_RADIUS: number = this.SCREEN_WIDTH * 0.01;
 
-  private gamePlayers: Map<string, string>;
-
   private readonly PLAYER_WIDTH_SCALE = 0.01;
   private readonly PLAYER_HEIGTH_SCALE = 0.25;
-
-  //TODO: fix naming
   private playerMarginX = 10;
   private playerPosY = 1920 / 2 - (1920 * this.PLAYER_HEIGTH_SCALE) / 2;
+
+  private readonly GAME_MAX_SCORE = 10;
+
+  private gamePlayers: Map<string, string>;
+
+
 
   constructor(
     private readonly cacheService: CacheService,
@@ -65,7 +67,6 @@ export class GameService {
         score1: game.player1_score,
         score2: game.player2_score
       });
-
 
       this.gamePlayers.delete(game.player1);
       this.gamePlayers.delete(game.player2);
@@ -217,26 +218,21 @@ export class GameService {
     gameRoom.ball_pos.X += gameRoom.ball_speed.X;
     gameRoom.ball_pos.Y += gameRoom.ball_speed.Y;
 
-    const ballX =
-      gameRoom.ball_pos.X +
-      (gameRoom.ball_speed.X > 0 ? this.BALL_RADIUS : -this.BALL_RADIUS);
-    const ballY =
-      gameRoom.ball_pos.Y +
-      (gameRoom.ball_speed.Y > 0 ? this.BALL_RADIUS : -this.BALL_RADIUS);
+    const ballX = gameRoom.ball_pos.X + (gameRoom.ball_speed.X > 0 ? this.BALL_RADIUS : -this.BALL_RADIUS);
+    const ballY = gameRoom.ball_pos.Y + (gameRoom.ball_speed.Y > 0 ? this.BALL_RADIUS : -this.BALL_RADIUS);
 
     if (ballY < 0 || ballY > this.SCREEN_HEIGTH)
-      //When ball hits up/down corners
       gameRoom.ball_speed.Y = -gameRoom.ball_speed.Y;
     else if (ballX <= 0 || ballX > this.SCREEN_WIDTH) {
       const target = ballX <= 0 ? 0 : 1;
       if (target == 0) {
         gameRoom.player2_score++;
-        if (gameRoom.player2_score == 2) return this.finishGame(gameRoomKey);
+        if (gameRoom.player2_score == this.GAME_MAX_SCORE) return this.finishGame(gameRoomKey);
         this.server.to(gameRoom.player2).emit('client:playSound', 1); // 1 = win sound
         this.server.to(gameRoom.player1).emit('client:playSound', 2); //2 = lose sound
       } else {
         gameRoom.player1_score++;
-        if (gameRoom.player1_score == 2) return this.finishGame(gameRoomKey);
+        if (gameRoom.player1_score == this.GAME_MAX_SCORE) return this.finishGame(gameRoomKey);
         this.server.to(gameRoom.player1).emit('client:playSound', 1);
         this.server.to(gameRoom.player2).emit('client:playSound', 2); //Todo: add lose sound
       }
@@ -281,12 +277,8 @@ export class GameService {
     console.log('Room Created: ', ROOM_PREFIX + key);
     await this.cacheService.setCache(ROOM_PREFIX + key, room);
   }
-  async findRooms(): Promise<string[]> {
-    const ret = await this.cacheService.getCaches();
-    return ret.filter((room) => room.startsWith(ROOM_PREFIX));
-  }
+
   async deleteRoom(key: string) {
-    key = ROOM_PREFIX + key;
     const rooms = await this.findRooms();
     const index = rooms.indexOf(key);
     if (index != -1) {
@@ -294,6 +286,25 @@ export class GameService {
       console.log('Room Deleted Succesfully', key);
     }
   }
+
+  async getRoom(key: string) : Promise<Room> {
+    return await this.cacheService.getCache(key);
+  }
+
+  async findRoomByClientId(clientId: string) {
+    const rooms = await this.findRooms();
+    const roomKey = rooms.find(async (roomKey)  => {
+      const room = await this.getRoom(roomKey);
+      if(room.player1 == clientId || room.player2 == clientId)
+        return roomKey;
+    })
+    return roomKey;
+  }
+  async findRooms(): Promise<string[]> {
+    const ret = await this.cacheService.getCaches();
+    return ret.filter((room) => room.startsWith(ROOM_PREFIX));
+  }
+
   async getUser(id: number) {
     return await this.userService.getOne({ id: id });
   }

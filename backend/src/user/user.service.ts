@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable, NotFoundException} from '@nestjs/common';
 import { UserDto } from './dto/user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -90,7 +90,14 @@ export class UserService {
     return await this.userRepository.delete(where);
   }
 
+  async getUser(user: string, token: string) {
+    const res = await this.intraService.getUser(user, token);
+    return res;
+  }
+
   async updateProfile(user_id: number, data: UpdateProfileDto) {
     return await this.userRepository.update({id: user_id}, data);
   }
+
+
 }

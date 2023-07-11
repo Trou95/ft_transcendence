@@ -1,6 +1,6 @@
 import config from 'src/config';
 import axios from 'axios';
-import { Injectable } from '@nestjs/common';
+import {Injectable, NotFoundException} from '@nestjs/common';
 import { UserDto } from '../user/dto/user.dto';
 import { IIntraToken } from './intra-token.interface';
 
@@ -39,21 +39,15 @@ export class IntraService {
     return {...res.data, token: intraToken}
   }
 
-  async getAllUsers(token: string) {
+  async getUser(user: string, token: string) {
     this.intraApiService.defaults.headers.common.Authorization = `Bearer ${token}`;
-
-    const res = await this.intraApiService.get("/campus/49");
-    const userCount = res.data.users_count;
-
-    console.log(userCount);
-
-    let users = [];
-    for(let i = 0; i < userCount / 30; i++) {
-      console.log(i);
-      const res : any = await this.intraApiService.get(`/campus/49/users?page=${i}`);
-      users = [...users,res.data.map(user => user.login)];
+    try {
+      const res = await this.intraApiService.get('/users/' + user);
+      return res.data;
     }
-    return users;
+    catch {
+      return null;
+    }
   }
 
   parseUser(user: any): UserDto {

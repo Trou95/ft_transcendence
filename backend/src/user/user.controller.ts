@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller, FileTypeValidator,
   Get,
@@ -51,6 +52,8 @@ export class UserController {
         ],
       })
   ) file) {
+    if(await this.userService.getUser(data.login, user.token))
+      throw new BadRequestException("This username already taken");
     data.avatar = "http://localhost:3000"  + "/uploads/" + file.filename;
     const ret = await this.userService.updateProfile(user.id, data);
     res.status(ret ? HttpStatus.OK : HttpStatus.BAD_REQUEST).send();

@@ -1,28 +1,27 @@
 import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
-import {
-  Injectable,
-  UnauthorizedException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { UserDto } from '../user/dto/user.dto';
 import { TokenService } from '../token/token.service';
 import { IntraService } from 'src/intra/intra.service';
 import { CallbackDto } from './dto/callback.dto';
-import { CacheService } from 'src/cache/cache.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { GoogleAuthenticator } from './2FA/google-auth.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectRepository(GoogleAuthenticator)
+    private readonly googleAuth: Repository<GoogleAuthenticator>,
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
     private readonly intraService: IntraService,
-    private readonly cacheService: CacheService,
   ) {}
 
   async callback(body: CallbackDto) {
-    const secretCache = await this.cacheService.getTwoFactorAuthCache();
+    const secretCache = (await this.googleAuth.find())[0];
 
     if (!secretCache) {
       throw new UnauthorizedException();
@@ -63,13 +62,15 @@ export class AuthService {
   }
 
   async getTwoFactorQrCode() {
-    let secret = await this.cacheService.getTwoFactorAuthCache();
+    const secret = (await this.googleAuth.find())[0];
 
     if (!secret) {
-      secret = speakeasy.generateSecret({
+      const newSecret = speakeasy.generateSecret({
         name: 'Ebul Feth',
       });
-      await this.cacheService.setTwoFactorAuthCache(secret);
+
+      await this.googleAuth.save(newSecret);
+      return qrcode.toDataURL(newSecret.otpauth_url);
     }
 
     return qrcode.toDataURL(secret.otpauth_url);

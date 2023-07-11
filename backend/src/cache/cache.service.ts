@@ -1,7 +1,6 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
-import { GeneratedSecret } from 'speakeasy';
 
 @Injectable()
 export class CacheService {
@@ -21,13 +20,5 @@ export class CacheService {
 
   async delCache(key: string) {
     await this.cache.del(key);
-  }
-
-  async setTwoFactorAuthCache(secret: GeneratedSecret) {
-    return this.setCache('AUTH_SECRET_2FA', secret);
-  }
-
-  async getTwoFactorAuthCache() {
-    return this.getCache<GeneratedSecret>('AUTH_SECRET_2FA');
   }
 }

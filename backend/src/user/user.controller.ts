@@ -3,7 +3,7 @@ import {
   Body,
   Controller, FileTypeValidator,
   Get,
-  HttpStatus, ParseFilePipe,
+  HttpStatus, NotFoundException, Param, ParseFilePipe,
   Post,
   Put,
   Res,
@@ -24,10 +24,22 @@ export class UserController {
   constructor(private readonly userService: UserService) {
   }
 
-  @Get("match-history")
-  async getMatchHistory(@User() user){
-    const res =  await this.userService.getMatchHistory(user.id);
-    return await this.userService.getMatchHistory(user.id);
+  @Get('/user/:id')
+  async getUser(@Param("id") userId: number) {
+    try {
+      const user = await this.userService.getOne({id: userId});
+      const matchs = await this.userService.getMatchHistory(user.id, 100);
+      return {...user, matchs};
+    }
+    catch {
+      throw new NotFoundException();
+    }
+  }
+
+  @Get("match-history/:id/:limit")
+  async getMatchHistory(@Param('id') id: number, @Param('limit') limit: number){
+    const res =  await this.userService.getMatchHistory(id,limit);
+    return res;
   }
 
   @Get("leaders")
@@ -45,6 +57,7 @@ export class UserController {
       }
     })
   }))
+
   async update(@Res() res: Response, @User() user, @Body() data : UpdateProfileDto, @UploadedFile(
       new ParseFilePipe({
         validators: [

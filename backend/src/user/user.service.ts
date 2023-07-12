@@ -30,6 +30,10 @@ export class UserService {
     return await this.userRepository.findOneBy(where);
   }
 
+  async findOne(query: any) : Promise<User> {
+    return await this.userRepository.findOne(query);
+  }
+
   async getAll(): Promise<User[]> {
     return await this.userRepository.find();
   }
@@ -70,8 +74,8 @@ export class UserService {
       .getMany();
   }
 
-  async getMatchHistory(id: number) {
-    return await this.matchService.getMatchHistory(id);
+  async getMatchHistory(id: number, limit?: number) {
+    return await this.matchService.getMatchHistory(id, limit);
   }
 
   async getTotalWins() {

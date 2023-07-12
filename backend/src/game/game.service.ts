@@ -29,7 +29,7 @@ export class GameService {
   private playerMarginX = 10;
   private playerPosY = 1920 / 2 - (1920 * this.PLAYER_HEIGTH_SCALE) / 2;
 
-  private readonly GAME_MAX_SCORE = 10;
+  private readonly GAME_MAX_SCORE = 2;
 
   private gamePlayers: Map<string, string>;
 

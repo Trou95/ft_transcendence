@@ -24,9 +24,9 @@ export class FriendController {
   ) {}
 
   @Post()
-  create(@User() currentUser, @Body() createFriendDto: CreateFriendDto) {
-    createFriendDto.user = currentUser.id;
-    return this.friendService.create(createFriendDto);
+  create(@User() currentUser, @Body() data: any) {
+    data.user = currentUser.id;
+    return this.friendService.create(data);
   }
 
   @Get()

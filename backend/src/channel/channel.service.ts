@@ -165,8 +165,13 @@ export class ChannelService {
     );
   }
 
-  async findOne(query: any) {
+  async findOne(query: any): Promise<Channel> {
     return await this.channelRepository.findOne(query);
+  }
+
+  async checkPassword(id: number, password: string): Promise<boolean> {
+    const channel = await this.channelRepository.findOne({ where: { id } });
+    return await bcrypt.compare(password, channel.password);
   }
 
   async update(id: number, updateChannelDto: UpdateChannelDto) {

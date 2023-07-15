@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Put,
   UploadedFile,
   UseGuards,
@@ -19,9 +20,12 @@ import { IJwtPayload } from 'src/interfaces/jwt-payload.interface';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get('match-history')
-  async getMatchHistory(@User() user: IJwtPayload) {
-    return await this.userService.getMatchHistory(user.id);
+  @Get('match-history/:id/:limit')
+  async getMatchHistory(
+    @Param('id') id: number,
+    @Param('limit') limit: number,
+  ) {
+    return await this.userService.getMatchHistory(id, limit);
   }
 
   @Get('leaders')

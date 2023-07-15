@@ -15,8 +15,8 @@ export class MatchService {
     await this.matchRepository.save(matchDto);
   }
 
-  async getMatchHistory(id: number) {
-    return await this.matchRepository
+  async getMatchHistory(id: number, limit: number) {
+    return this.matchRepository
       .createQueryBuilder('match')
       .leftJoin('match.player1', 'player1')
       .addSelect(['player1.full_name', 'player1.avatar'])
@@ -24,7 +24,7 @@ export class MatchService {
       .addSelect(['player2.full_name', 'player2.avatar'])
       .where('match.player1Id = :id OR match.player2Id = :id', { id })
       .orderBy('match.id', 'DESC')
-      .take(5)
+      .take(limit ?? 5)
       .getMany();
   }
 

@@ -71,8 +71,8 @@ export class UserService {
       .getMany();
   }
 
-  async getMatchHistory(id: number) {
-    return this.matchService.getMatchHistory(id);
+  async getMatchHistory(id: number, limit: number) {
+    return this.matchService.getMatchHistory(id, limit);
   }
 
   async getTotalWins() {

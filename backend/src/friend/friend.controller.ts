@@ -9,7 +9,6 @@ import {
   Put,
 } from '@nestjs/common';
 import { FriendService } from './friend.service';
-import { CreateFriendDto } from './dto/create-friend.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../@decorators/user.decorator';
 import { UserService } from '../user/user.service';
@@ -24,9 +23,9 @@ export class FriendController {
   ) {}
 
   @Post()
-  create(@User() currentUser, @Body() createFriendDto: CreateFriendDto) {
-    createFriendDto.user = currentUser.id;
-    return this.friendService.create(createFriendDto);
+  create(@User() currentUser, @Body() data: any) {
+    data.user = currentUser.id;
+    return this.friendService.create(data);
   }
 
   @Get()

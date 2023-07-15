@@ -9,6 +9,7 @@ import { CallbackDto } from './dto/callback.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GoogleAuthenticator } from './2FA/google-auth.entity';
 import { Repository } from 'typeorm';
+import { IJwtPayload } from 'src/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -21,22 +22,6 @@ export class AuthService {
   ) {}
 
   async callback(body: CallbackDto) {
-    const secretCache = (await this.googleAuth.find())[0];
-
-    if (!secretCache) {
-      throw new UnauthorizedException();
-    }
-
-    const isVerified = speakeasy.totp.verify({
-      secret: secretCache.ascii,
-      encoding: 'ascii',
-      token: body.twoFactorAuthCode,
-    });
-
-    if (!isVerified) {
-      throw new UnauthorizedException();
-    }
-
     const intraUser = await this.intraService.getMe(body.code);
 
     const userData: UserDto = this.intraService.parseUser(intraUser);
@@ -49,27 +34,61 @@ export class AuthService {
 
     const user = await this.userService.getOne({ intra_id });
 
-    const accessToken = this.tokenService.createJwt({
-      id: user.id,
-      token: intraUser.token,
+    const token = this.tokenService.createJwt({ id: user.id });
+
+    if (user.twoFA) {
+      return { user: { id: user.id } };
+    }
+
+    return { user, token };
+  }
+
+  async verify2FA(userId: number, code: string) {
+    const secret = await this.googleAuth.findOne({
+      where: { user: { id: userId } },
     });
+
+    if (!secret) {
+      throw new UnauthorizedException();
+    }
+
+    const isVerified = speakeasy.totp.verify({
+      secret: secret.ascii,
+      encoding: 'ascii',
+      token: code,
+    });
+
+    if (!isVerified) {
+      throw new UnauthorizedException();
+    }
+
+    const user = await this.userService.getOne({ id: userId });
+
+    const accessToken = this.tokenService.createJwt({ id: userId });
 
     return { user, token: accessToken };
   }
 
   async myAccount(id: number) {
-    return await this.userService.getOne({ id });
+    return this.userService.getOne({ id });
   }
 
-  async getTwoFactorQrCode() {
-    const secret = (await this.googleAuth.find())[0];
+  async getTwoFactorQrCode(user: IJwtPayload) {
+    const secret = await this.googleAuth.findOne({
+      where: { user: { id: user.id } },
+    });
 
     if (!secret) {
       const newSecret = speakeasy.generateSecret({
         name: 'Ebul Feth',
       });
 
-      await this.googleAuth.save(newSecret);
+      await this.googleAuth.save(
+        this.googleAuth.create({
+          ...newSecret,
+          user: { id: user.id },
+        }),
+      );
       return qrcode.toDataURL(newSecret.otpauth_url);
     }
 

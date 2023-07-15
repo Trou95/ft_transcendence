@@ -96,11 +96,6 @@ export class ChannelController {
     });
   }
 
-  @Post('check-password')
-  async checkPassword(@Body() body: { id: number; password: string }) {
-    return await this.channelService.checkPassword(body.id, body.password);
-  }
-
   @Put(':id')
   update(@Param('id') id: string, @Body() updateChannelDto: UpdateChannelDto) {
     return this.channelService.update(+id, updateChannelDto);

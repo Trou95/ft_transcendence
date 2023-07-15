@@ -36,4 +36,6 @@ export class User {
   @JoinColumn()
   channels: ChannelUser[];
 
+  @Column('bool', { default: false })
+  twoFA: boolean;
 }

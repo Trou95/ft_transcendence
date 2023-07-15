@@ -1,10 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
-import {IsNotEmpty, IsString} from "class-validator";
-import {Type} from "class-transformer";
+import { IsBooleanString, IsOptional, IsString } from 'class-validator';
 
 export class UpdateProfileDto {
-    @IsNotEmpty({message: "login is required"})
-    login: string;
+  @IsOptional()
+  @IsString()
+  login: string;
 
-    avatar: string;
+  @IsOptional()
+  @IsBooleanString()
+  twoFA: boolean;
 }

@@ -7,13 +7,6 @@ import {
 } from '@nestjs/websockets';
 import { ChannelService } from '../channel/channel.service';
 import { ChannelUser } from '../friend/entities/channel-user.entity';
-import * as bcrypt from 'bcrypt';
-import { Channel } from '../channel/entities/channel.entity';
-
-interface JoinChannelPayload {
-  channelId: number;
-  channelPassword: string;
-}
 
 @WebSocketGateway(9000, {
   namespace: 'chat',
@@ -62,26 +55,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // channel message
   @SubscribeMessage('join-channel')
-  async handleJoinChannel(client: any, payload: JoinChannelPayload) {
-    const { channelId, channelPassword } = payload;
-
-    if (!channelPassword) {
-      console.log('joined channel: ', client.id, payload);
-      client.join(channelId.toString());
-    } else {
-      const channel = await this.channelService.findOne({
-        where: {
-          id: channelId,
-        },
-      });
-
-      bcrypt.compare(channelPassword, channel.password, (err, res) => {
-        if (res) {
-          console.log('joined channel: ', client.id, payload);
-          client.join(channelId.toString());
-        }
-      });
-    }
+  handleJoinChannel(client: any, payload: any): any {
+    const channelId = payload;
+    console.log('joined channel: ', client.id, payload);
+    client.join(channelId.toString());
   }
 
   @SubscribeMessage('leave-channel')

@@ -10,9 +10,11 @@ import { FriendStatus } from '../entities/friend.entity';
 
 export class CreateFriendDto {
   @IsNumber()
+  @IsNotEmpty()
   user: number;
 
   @IsNumber()
+  @IsNotEmpty()
   friend: number;
 
   @IsEnum(FriendStatus)

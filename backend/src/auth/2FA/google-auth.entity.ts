@@ -1,4 +1,12 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/user/user.entity';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class GoogleAuthenticator extends BaseEntity {
@@ -16,4 +24,8 @@ export class GoogleAuthenticator extends BaseEntity {
 
   @Column()
   base32: string;
+
+  @OneToOne(() => User, (user) => user.id)
+  @JoinColumn()
+  user: User;
 }

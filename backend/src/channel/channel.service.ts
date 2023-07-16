@@ -3,7 +3,7 @@ import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel, ChannelType } from './entities/channel.entity';
-import { Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { ChannelUser } from '../friend/entities/channel-user.entity';
 import * as bcrypt from 'bcrypt';
 
@@ -51,6 +51,18 @@ export class ChannelService {
         id: channelId,
       },
       user: body.userId,
+    });
+  }
+
+  async joinChannel(userId: number, channelId: number) {
+    await this.channelUserRepository.insert({
+      channel: {
+        id: channelId,
+        type: ChannelType.PUBLIC,
+      },
+      user: {
+        id: userId,
+      },
     });
   }
 
@@ -146,6 +158,25 @@ export class ChannelService {
         },
       },
       relations: ['user'],
+    });
+  }
+
+  async findPublicChannels(currentUser: any) {
+    const joinedChannels = await this.findAll({
+      where: {
+        user: {
+          id: currentUser.id,
+        },
+      },
+      relations: ['channel'],
+    });
+
+    const joinedChannelIds = joinedChannels.map(
+      (channel) => channel.channel.id,
+    );
+
+    return await this.channelRepository.find({
+      where: { id: Not(In(joinedChannelIds)), type: ChannelType.PUBLIC },
     });
   }
 

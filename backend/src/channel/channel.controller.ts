@@ -56,6 +56,11 @@ export class ChannelController {
     });
   }
 
+  @Get('/public')
+  async findPublicChannels(@User() currentUser: any) {
+    return await this.channelService.findPublicChannels(currentUser);
+  }
+
   @Get('/non-members/:id')
   async findNonMembers(@User() currentUser: any, @Param('id') id: number) {
     return await this.userService.findNonChannelMembers(currentUser, id);
@@ -89,6 +94,11 @@ export class ChannelController {
     return await this.channelService.updateMember(id, userId, body);
   }
 
+  @Post('join/:id')
+  async join(@User() currentUser: any, @Param('id') id: number) {
+    return await this.channelService.joinChannel(currentUser.id, id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.channelService.findOne({
@@ -102,7 +112,8 @@ export class ChannelController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateChannelDto: UpdateChannelDto) {
+  update(@Param('id') id: string, @Body() updateChannelDto: any) {
+    console.log(updateChannelDto);
     return this.channelService.update(+id, updateChannelDto);
   }
 

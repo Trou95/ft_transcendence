@@ -67,7 +67,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     if (!channelPassword) {
       console.log('joined channel: ', client.id, payload);
-      client.join(channelId.toString());
+      client.join(payload.toString());
     } else {
       const channel = await this.channelService.findOne({
         where: {
@@ -104,6 +104,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     const channelId: string = payload.channelId.toString();
+
     this.server.to(channelId).emit('channel-message', payload);
   }
 }

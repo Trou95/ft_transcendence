@@ -20,6 +20,18 @@ import { IJwtPayload } from 'src/interfaces/jwt-payload.interface';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get('/user/:id')
+  async getUser(@Param("id") userId: number) {
+    try {
+      const user = await this.userService.getOne({id: userId});
+      const matchs = await this.userService.getMatchHistory(user.id, 100);
+      return {...user, matchs};
+    }
+    catch {
+      throw new NotFoundException();
+    }
+  }
+
   @Get('match-history/:id/:limit')
   async getMatchHistory(
     @Param('id') id: number,

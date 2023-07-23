@@ -23,7 +23,6 @@ export class AuthService {
 
   async callback(body: CallbackDto) {
     const intraUser = await this.intraService.getMe(body.code);
-
     const userData: UserDto = this.intraService.parseUser(intraUser);
     const intra_id = userData.intra_id;
 

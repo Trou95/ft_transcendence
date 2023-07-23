@@ -9,6 +9,7 @@ import { ChannelService } from '../channel/channel.service';
 import { ChannelUser } from '../friend/entities/channel-user.entity';
 import * as bcrypt from 'bcrypt';
 import { Channel } from '../channel/entities/channel.entity';
+import { UserService } from '../user/user.service';
 
 interface JoinChannelPayload {
   channelId: number;
@@ -26,7 +27,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private connectedClients = new Map<number, any>();
 
-  constructor(private readonly channelService: ChannelService) {}
+  constructor(
+    private readonly channelService: ChannelService,
+    private readonly userService: UserService,
+  ) {}
 
   afterInit(): void {
     console.log('websocket initialized ');
@@ -37,6 +41,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: any): any {
+    console.log(client.id, 'disconnected');
+    for (const [key, value] of this.connectedClients.entries()) {
+      if (value === client.id) {
+        this.userService.update({ id: key }, { is_online: false });
+        console.log('Key:', key);
+        break;
+      }
+    }
+
     this.connectedClients.delete(client.id);
   }
 
@@ -44,6 +57,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('connect-user')
   handleConnectUser(client: any, payload: any): any {
     this.connectedClients.set(payload, client.id);
+    this.userService.update({ id: payload }, { is_online: true });
     console.log('client: ', this.connectedClients);
   }
 

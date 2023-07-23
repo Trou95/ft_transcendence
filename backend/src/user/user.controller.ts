@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Put,
   UploadedFile,
@@ -21,13 +22,12 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('/user/:id')
-  async getUser(@Param("id") userId: number) {
+  async getUser(@Param('id') userId: number) {
     try {
-      const user = await this.userService.getOne({id: userId});
+      const user = await this.userService.getOne({ id: userId });
       const matchs = await this.userService.getMatchHistory(user.id, 100);
-      return {...user, matchs};
-    }
-    catch {
+      return { ...user, matchs };
+    } catch {
       throw new NotFoundException();
     }
   }

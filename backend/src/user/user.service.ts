@@ -83,7 +83,7 @@ export class UserService {
     return this.userRepository.insert(user);
   }
 
-  async update(data: UserDto, where: any): Promise<UpdateResult> {
+  async update(where: any, data: UserDto): Promise<UpdateResult> {
     return this.userRepository.update(where, data);
   }
 

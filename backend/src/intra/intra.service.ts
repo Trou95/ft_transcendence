@@ -1,6 +1,6 @@
 import config from 'src/config';
 import axios from 'axios';
-import {Injectable, NotFoundException} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserDto } from '../user/dto/user.dto';
 import { IIntraToken } from './intra-token.interface';
 
@@ -36,7 +36,7 @@ export class IntraService {
     const intraToken = await this.createIntraToken(code);
 
     const res = await this.intraApiService.get('/me');
-    return {...res.data, token: intraToken}
+    return { ...res.data, token: intraToken };
   }
 
   async getUser(user: string, token: string) {
@@ -44,8 +44,7 @@ export class IntraService {
     try {
       const res = await this.intraApiService.get('/users/' + user);
       return res.data;
-    }
-    catch {
+    } catch {
       return null;
     }
   }

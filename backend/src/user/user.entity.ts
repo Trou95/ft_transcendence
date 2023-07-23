@@ -38,4 +38,7 @@ export class User {
 
   @Column('bool', { default: false })
   twoFA: boolean;
+
+  @Column({ default: false })
+  is_online: boolean;
 }

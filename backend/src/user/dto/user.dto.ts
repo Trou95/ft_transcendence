@@ -1,7 +1,8 @@
 export class UserDto {
-  intra_id: number;
-  login: string;
-  full_name: string;
-  email: string;
-  avatar: string;
+  intra_id?: number;
+  login?: string;
+  full_name?: string;
+  email?: string;
+  avatar?: string;
+  is_online?: boolean;
 }

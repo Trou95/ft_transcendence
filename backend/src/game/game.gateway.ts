@@ -131,7 +131,7 @@ export class GameGateway
       const playerPos = this.SCREEN_HEIGHT * game.player1_pos.Y / 100;
       if(game.ball_pos.X - this.BALL_RADIUS <= game.player1_pos.X + this.PLAYER_WIDTH && game.ball_pos.Y >= playerPos && game.ball_pos.Y <= (playerPos + this.PLAYER_HEIGHT)) {
         game.ball_speed.X = -game.ball_speed.X;
-        game.ball_speed.X  = Math.min(Math.max(game.ball_speed.X * 1.2, -12), 12);
+        game.ball_speed.X  = Math.min(Math.max(game.ball_speed.X * 1.1, -10), 10);
       }
     }
     else
@@ -139,7 +139,7 @@ export class GameGateway
       const playerPos = this.SCREEN_HEIGHT * game.player2_pos.Y / 100;
       if(game.ball_pos.X + this.BALL_RADIUS >= playerPos && game.ball_pos.Y >= playerPos && playerPos + this.PLAYER_HEIGHT) {
         game.ball_speed.X = -game.ball_speed.X;
-        game.ball_speed.X  = Math.min(Math.max(game.ball_speed.X * 1.2, -12), 12);
+        game.ball_speed.X  = Math.min(Math.max(game.ball_speed.X * 1.1, -10), 10);
       }
     }
   }

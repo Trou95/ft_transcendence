@@ -29,7 +29,9 @@ export class AuthService {
     const isUserExist = await this.userService.isExist({ intra_id });
 
     if (!isUserExist) await this.userService.create(userData);
-    else await this.userService.update(userData, intraUser.id);
+    else await this.userService.update({
+      intra_id: intraUser.id
+    }, userData);
 
     const user = await this.userService.getOne({ intra_id });
 

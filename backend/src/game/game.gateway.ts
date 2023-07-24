@@ -36,7 +36,7 @@ export class GameGateway
   afterInit(server: Server) {
     this.gameService.server = server;
     setInterval(() => {
-      this.updateGames(this.gameService);
+      this.updateGames();
     },30);
   }
 
@@ -65,7 +65,7 @@ export class GameGateway
     }
   }
 
-  async updateGames(gameService)
+  async updateGames()
   {
 
     const rooms = await this.gameService?.getGameRooms();

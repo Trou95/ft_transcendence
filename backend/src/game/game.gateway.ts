@@ -10,6 +10,7 @@ import {
 import {GameService} from './game.service';
 import {Server, Socket} from 'socket.io';
 import {GameStatus} from "./entities/game.entity";
+import {UserService} from "../user/user.service";
 
 @WebSocketGateway(9000, {
   namespace: 'game',
@@ -30,7 +31,7 @@ export class GameGateway
   private readonly PLAYER_MARGIN = this.PLAYER_WIDTH / 2;
   private readonly BALL_RADIUS = this.SCREEN_WIDTH * this.PLAYER_WIDTH_SCALE;
 
-  constructor(private readonly gameService: GameService) {
+  constructor(private readonly gameService: GameService, private readonly userService: UserService) {
   }
 
   afterInit(server: Server) {
@@ -56,7 +57,10 @@ export class GameGateway
       const playerId = game.player1 == client.id ? game.player1 : game.player2;
 
       await this.gameService.delOnlineUser(game.player1 == client.id ? game.player1_id : game.player2_id);
+      await this.userService.update({id: game.player1_id}, {is_gamer: false})
+      await this.userService.update({id: game.player2_id}, {is_gamer: false})
       await this.gameService.finishGame(gameRoom, playerId);
+
       console.log("Game Finish");
     }
     else {
@@ -101,6 +105,7 @@ export class GameGateway
     //Normal Play Duzeltilecek Matchmaking
     const user = await this.gameService.getUser(body.id);
     await this.gameService.addOnlineUser(body.id);
+    await this.userService.update({id: body.id}, {is_gamer: true})
     console.log('Emit Match ', socket.id, "User", user.full_name, body.id);
     return await this.gameService.match(socket, body.id, body.invite);
   }

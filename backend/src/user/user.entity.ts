@@ -41,4 +41,7 @@ export class User {
 
   @Column({ default: false })
   is_online: boolean;
+
+  @Column({ default: false })
+  is_gamer: boolean;
 }

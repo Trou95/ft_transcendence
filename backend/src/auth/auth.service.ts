@@ -33,9 +33,12 @@ export class AuthService {
       intra_id: intraUser.id
     }, userData);
 
-    const user = await this.userService.getOne({ intra_id });
+    let user: any = await this.userService.getOne({ intra_id });
 
     const token = this.tokenService.createJwt({ id: user.id });
+
+    if(!isUserExist)
+      user = {...user, is_first_login: true};
 
     if (user.twoFA) {
       return { user: { id: user.id } };

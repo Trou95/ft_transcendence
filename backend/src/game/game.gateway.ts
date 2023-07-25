@@ -38,7 +38,7 @@ export class GameGateway
     this.gameService.server = server;
     setInterval(() => {
       this.updateGames();
-    },10);
+    },25);
   }
 
   async handleConnection(client: Socket) {

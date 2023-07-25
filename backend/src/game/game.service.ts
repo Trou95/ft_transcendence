@@ -26,7 +26,7 @@ export class GameService {
 
   private readonly PLAYER_WIDTH_SCALE = 0.01;
   private readonly PLAYER_HEIGTH_SCALE = 0.25;
-  private playerMarginX = 10;
+  private playerMarginX = 3;
   private playerPosY = 1920 / 2 - (1920 * this.PLAYER_HEIGTH_SCALE) / 2;
 
   private readonly GAME_MAX_SCORE = 10;

@@ -5,5 +5,5 @@ export class UserDto {
   email?: string;
   avatar?: string;
   is_online?: boolean;
-  is_gamer?: boolean;
+  is_ingame?: boolean;
 }

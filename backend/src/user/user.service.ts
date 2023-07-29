@@ -104,8 +104,12 @@ export class UserService {
       this.userRepository.create({
         id: user_id,
         ...data,
+        /*
+          Avatar Path
+          Not tested yet use localhost/remote-ip instead if not works
+        */
         avatar: file
-          ? `http://localhost:${config.app.port}/uploads/${file.filename}`
+          ? `:${config.app.port}/uploads/${file.filename}`
           : undefined,
       }),
     );

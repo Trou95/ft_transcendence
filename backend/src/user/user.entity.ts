@@ -43,5 +43,5 @@ export class User {
   is_online: boolean;
 
   @Column({ default: false })
-  is_gamer: boolean;
+  is_ingame: boolean;
 }
